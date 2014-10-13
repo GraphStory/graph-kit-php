@@ -24,6 +24,9 @@
             "role": "Contributor"
         }
     ],
+    "support": {
+        "email": "support@graphstory.com"
+    },
     "require": {
         "php": ">=5.3.0",
         "dearon/slim-mustache": "0.1.*",
