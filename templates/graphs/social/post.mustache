@@ -1,0 +1,39 @@
+{{< layout }}
+
+{{$ title }}Social{{/ title }}
+
+{{$ content }}
+<div class="row">
+    <div class="col-md-3">
+        {{> social-nav }}
+    </div>
+    <div class="col-md-9">
+        {{# postContent.title }}
+        <h3>{{ postContent.title }}</h3>
+        {{/ postContent.title }}
+
+        <table class="table table-striped" id="content">
+            {{# postContent.title }}
+            <tr>
+                <td>
+                    <a href="{{ postContent.url }}" target="_blank">{{ postContent.title }}</a> {{ postContent.owner }}  
+                    <br><br>
+
+                    tags: {{ postContent.tagstr }} 
+                    <br><br> 
+
+                    Posted by {{ postContent.userNameForPost }} at {{ postContent.timestamp }}
+                    <br>
+                </td>
+            </tr>
+            {{/ postContent.title }}
+
+            {{^ postContent.title }}
+            <tr><td>Post not found</td></tr>
+            {{/ postContent.title }}
+            <tr><td><a href="/posts" > &lt;&lt;&lt; Back </a></td></tr>
+        </table>
+    </div>
+</div>
+{{/ content }}
+{{/ layout }}

@@ -1,0 +1,23 @@
+---
+- hosts: all
+  sudo: true
+  vars:
+    web_server: apachephp
+    servername: graph-kit-php.dev
+    timezone: UTC
+    php_ini: /etc/php5/apache2/php.ini
+    php_error_reporting: -1
+    php_display_errors: 'On'
+    php_display_startup_errors: 'On'
+    php_html_errors: 'On'
+  vars_files:
+    - vars/common.yml
+    - [ "vars/apachephp.yml", "vars/ws_defaults.yml" ]
+  roles:
+    - init
+    - php5-cli
+    - apache
+    - php5
+    - composer
+    - phpcommon
+    - app

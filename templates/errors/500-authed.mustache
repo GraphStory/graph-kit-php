@@ -1,0 +1,23 @@
+{{< layout }}
+
+{{$ title }}500 - Internal Server Error{{/ title }}
+
+{{$ content }}
+
+<h2>Something Has Gone Terribly Wrong!</h2>
+
+<p class="lead">
+    Ruh roh. Something broke. Please check the application logs 
+    to determine what went wrong.
+</p>
+
+<p class="lead">
+    In the meantime, you might try hitting one of these links:
+    <ul class="lead">
+        {{# navigation }}
+        <li class="{{ class }} "><a  href="{{ href }}">{{ caption }}</a></li>
+        {{/ navigation }}
+    </ul>
+</p>
+{{/ content }}
+{{/ layout }}

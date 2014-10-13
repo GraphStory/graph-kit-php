@@ -1,0 +1,41 @@
+{
+    "name": "graphstory/graph-kit-php",
+    "description": "Graph Story Graph Kit for PHP",
+    "keywords": [
+        "neo4j",
+        "Graph Story",
+        "graph databases",
+        "graphs",
+        "example"
+    ],
+    "homepage": "http://graphstory.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gregory Jordan",
+            "email": "greg@graphstory.com",
+            "homepage": "http://graphstory.com",
+            "role": "Project lead"
+        },
+        {
+            "name": "Jeremy Kendall",
+            "email": "greg@graphstory.com",
+            "homepage": "http://graphstory.com",
+            "role": "Contributor"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "dearon/slim-mustache": "0.1.*",
+        "everyman/neo4jphp": "dev-master",
+        "monolog/monolog": "1.*",
+        "mustache/mustache": "~2.7",
+        "slim/slim": "2.*",
+        "zendframework/zend-config": "~2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "GraphStory\\GraphKit\\": "src/"
+        }
+    }
+}

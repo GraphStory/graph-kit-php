@@ -1,0 +1,9 @@
+---
+# application tasks to be customized and to run after the main provision
+- name: "Create mustache cache directory"
+  file: >
+    name=/tmp/mustache-cache
+    owner=www-data
+    group=www-data
+    mode=0775
+    state=directory

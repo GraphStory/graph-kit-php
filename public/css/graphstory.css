@@ -1,0 +1,23 @@
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 100px;
+  padding-bottom: 20px;
+}
+.hidey {display: none; }
+.pad {padding-left: 40px;}
+.navbar-inverse {background-color: #E3E3E3; padding: 0 0 0 0;}
+.navbar-nav { margin-left: 55px;}
+.navbar-inverse .navbar-nav>.active>a, .navbar-inverse .navbar-nav>.active>a:hover, .navbar-inverse .navbar-nav>.active>a:focus {background-color: #555555;}
+.error {color: #C9302C; font-size: 18px; list-style-type: none; margin: 0; padding: 0}
+.input-sm { width: 250px;}
+.input-lg { width: 350px;}
+.input-rly-lg { width: 550px;}
+.form-horizontal {padding-top: 30px;}
+.form-inline {padding-bottom: 30px;}
+h5.tfhmf {color: #C9302C; font-size: 14px; margin:  40px 0 10px 0;}
+a:hover {cursor: hand};
+div.productTags { font-size: 14px; padding: 5px 0 10px 0}
+#sidemenu {margin: 40px 0 40px 0;}
+li#feed_load {list-style:  none; list-style-type: none;}
+li.list-group-item.active {background-color: #5cb85c; color: #F5F5F5;}
+li.list-group-item.active a {background-color: #5cb85c; color: #F5F5F5;}
