@@ -41,7 +41,7 @@ $neo4jClient->getTransport()->setAuth(
 );
 
 if ($config['graphStory']['https']) {
-    $neo4jClient->useHttps();
+    $neo4jClient->getTransport()->useHttps();
 }
 
 $app = new Slim($config['slim']);

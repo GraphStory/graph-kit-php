@@ -3,4 +3,4 @@
     doc_root: /vagrant
     sys_packages: ["git","vim"]
     dist: precise
-    php_packages: ["php5-mcrypt","php5-xdebug"]
+    php_packages: ["php5-curl","php5-mcrypt","php5-xdebug"]
