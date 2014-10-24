@@ -4,4 +4,5 @@
 /templates/cache/*
 !/templates/cache/README.md
 .DS_STORE
+.vagrant/
 config/secret.php
