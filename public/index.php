@@ -47,7 +47,7 @@ if ($config['graphStory']['https']) {
 $app = new Slim($config['slim']);
 
 $app->container->singleton('logger', function () use ($config) {
-    $logger = new Logger('slim-skeleton');
+    $logger = new Logger('graph-kit');
     $logger->pushHandler(new StreamHandler(
         $config['logging']['logFile'],
         $config['logging']['logLevel']
