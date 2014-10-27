@@ -2,7 +2,7 @@ $( document ).ready(function() {
     getTags();
     searchProducts();
     menu();
-    loadMoArProducts();
+    // loadMoArProducts();
 });
 
 function menu(){
