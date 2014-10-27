@@ -21,10 +21,15 @@ class Navigation extends Middleware
 
         $navigation = [
             ['caption' => 'Social Graph', 'href' => $app->urlFor('social-graph')],
+                /**
+                 * These links are for Graph Kit features currently "in the works"
+                 */
+                /*
             ['caption' => 'Interest Graph', 'href' => '#'],
             ['caption' => 'Consumption Graph', 'href' => '#'],
             ['caption' => 'Location Graph', 'href' => '#'],
             ['caption' => 'Intent Graph', 'href' => '#'],
+                 */
         ];
 
         if (isset($_SESSION['username']) && !empty($_SESSION['username'])) {
