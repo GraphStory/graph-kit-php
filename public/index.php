@@ -291,11 +291,10 @@ $app->post('/posts/add', function () use ($app) {
     if (isset($contentParams->tagstr)) {
         $content->tagstr = $contentParams->tagstr;
     }
-    $post =  Content::add($_SESSION['username'], $content);
 
-    $app->jsonResponse->build(
-        array('content' => $post)
-    );
+    $post = Content::add($_SESSION['username'], $content);
+
+    $app->jsonResponse->build($post[0]);
 });
 
 // social - edit a post
