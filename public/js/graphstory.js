@@ -45,26 +45,25 @@ $('#morecontent').on('click', 'a.next', function() {
 });
 
 $('#contentAddEdit').on('click', 'a#addcontent', function() {
-
     if ( $("#contentform").is(":visible") ) {
         $("#addcontent").text('Add Content');
         $("#contentform")[0].reset();
         $("#contentform").hide();
-    }else{
+    } else {
         $("#contentform").show();
         $("#addcontent").text("Cancel");
         $("#btnSaveContent").text('Add Content');
-
     }
+
     return false;
 });
 
 
 $('#btnSaveContent').click(function() {
-    if ($('#contentId').val() == ''){
+    if ($('#contentId').val() === undefined){
         addContent();
         return false;
-    }else{
+    } else {
         updateContent();
         return false;
     }
@@ -203,7 +202,7 @@ function getcontent(skip){
     });
 }
 
-function addContent(){
+function addContent() {
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
@@ -212,7 +211,7 @@ function addContent(){
         data: contentformToJSON(),
         success: function(data, textStatus, jqXHR){
 
-            $('#content').prepend('<tr><td><a href="'+data.url+'" target="_blank">'+data.title+'</a>   <br/>tags: '+data.tagstr+' ::   Posted by '+data.userNameForPost+' at <a href="/viewpost/'+data.contentId+'">'+data.timestampAsStr+'</a><br/></td></tr>');
+            $('#content').prepend('<tr><td><a href="'+data.url+'" target="_blank">'+data.title+'</a>   <br/>tags: '+data.tagstr+' ::   Posted by '+data.userNameForPost+' at <a href="/viewpost/'+data.contentId+'">'+data.timestamp+'</a><br/></td></tr>');
 
             $('#title').val("");
             $('#url').val("");
@@ -221,10 +220,11 @@ function addContent(){
             $("#addcontent").text('Add Content');
         },
         error: function(jqXHR, textStatus, errorThrown){
-            alert('add contnt error: ' + errorThrown);
+            alert('Add content error: ' + errorThrown);
         }
     });
 }
+
 function updateContent() {
 
     var contentId =$("#contentId").val();
