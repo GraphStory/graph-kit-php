@@ -26,12 +26,33 @@ class User
         }
     }
 
+    public static function friendSuggestions($username)
+    {
+        $queryString = <<<CYPHER
+MATCH (u:User), (user:User { username: {username} })
+WHERE u <> user
+AND (NOT (user)-[:FOLLOWS]->(u))
+RETURN u
+LIMIT 5
+CYPHER;
+
+        $query = new Query(
+            Neo4jClient::client(),
+            $queryString,
+            array('username' => $username)
+        );
+
+        $result = $query->getResultSet();
+
+        return self::returnAsUsers($result);
+    }
+
     public static function getNodeByUsername($username)
     {
         $userlabel = Neo4jClient::client()->makeLabel('User');
-        $nodes= $userlabel->getNodes('username', $username);
+        $nodes = $userlabel->getNodes('username', $username);
 
-        if (empty($nodes) || count($nodes)==0) {
+        if (empty($nodes) || count($nodes) == 0) {
             return null;
         } else {
             return $nodes[0];

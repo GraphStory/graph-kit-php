@@ -34,6 +34,12 @@ $('#userstoadd').on('click', 'a.addfriend', function() {
     return false;
 });
 
+$('#suggestions').on('click', 'a.addfriend', function() {
+    addfriend($(this).attr('id'));
+    $(this).closest("tr").remove();
+    return false;
+});
+
 $('#following').on('click', 'a.removefriend', function() {
     removefriend($(this).attr('id'));
     return false;

@@ -207,10 +207,12 @@ $app->put('/user/edit', function () use ($app) {
 $app->get('/friends', $isLoggedIn, function () use ($app) {
     $user = User::getByUsername($_SESSION['username']);
     $following = User::following($_SESSION['username']);
+    $suggestions = User::friendSuggestions($_SESSION['username']);
 
     $app->render('graphs/social/friends.mustache', array(
         'user' => $user,
         'following' => $following,
+        'suggestions' => $suggestions,
     ));
 });
 

@@ -27,7 +27,19 @@ class Content
             " WITH p, collect(lastpost) as lastposts ".
             " FOREACH (x IN lastposts |  CREATE p-[:NEXTPOST]->x ) ".
             " RETURN p, {u}  as username, true as owner ";
-        $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username, 'title' => $content->title, 'url' => $content->url, 'tagstr' => $content->tagstr, 'timestamp' => time(), 'uuid' => uniqid() ));
+
+        $query = new Query(
+            Neo4jClient::client(),
+            $queryString,
+            array(
+                'u' => $username,
+                'title' => $content->title,
+                'url' => $content->url,
+                'tagstr' => $content->tagstr,
+                'timestamp' => time(),
+                'uuid' => uniqid()
+            )
+        );
         $result = $query->getResultSet();
 
         return self::returnMappedContent($result);
@@ -119,8 +131,8 @@ class Content
 
     public static function getContent($username, $s)
     {
-        // we're doing LIMIT 4. At present we're only displaying 3. the extra 
-        // item is to ensure there's more to view, so the next skip will be 3, 
+        // we're doing LIMIT 4. At present we're only displaying 3. the extra
+        // item is to ensure there's more to view, so the next skip will be 3,
         // then 6, then 12
         $queryString = "MATCH (u:User {username: {u} })-[:FOLLOWS*0..1]->f "
             . "WITH DISTINCT f, u "
@@ -129,10 +141,10 @@ class Content
             . "ORDER BY p.timestamp desc SKIP {s} LIMIT 4";
 
         $query = new Query(
-            Neo4jClient::client(), 
-            $queryString, 
+            Neo4jClient::client(),
+            $queryString,
             array(
-                'u' => $username, 
+                'u' => $username,
                 's' => $s
             )
         );
@@ -147,8 +159,8 @@ class Content
 
         foreach ($results as $row) {
             $mappedContentArray[] = self::fromMappedContentArray(
-                $row['p'], 
-                $row['username'], 
+                $row['p'],
+                $row['username'],
                 $row['owner']
             );
         }
