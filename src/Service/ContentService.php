@@ -4,9 +4,11 @@ namespace GraphStory\GraphKit\Service;
 
 use Everyman\Neo4j\Cypher\Query;
 use Everyman\Neo4j\Node;
+use Everyman\Neo4j\Query\ResultSet;
+use GraphStory\GraphKit\Model\Content;
 use GraphStory\GraphKit\Neo4jClient;
 
-class Content
+class ContentService
 {
     protected $node = null;
     public $id = null;
@@ -18,6 +20,13 @@ class Content
     public $userNameForPost = '';
     public $owner = false;
 
+    /**
+     * Adds content
+     *
+     * @param  string    $username User adding content
+     * @param  Content   $content  Content to add
+     * @return Content[]
+     */
     public static function add($username, Content $content)
     {
         $queryString = "MATCH (user { username:{u}}) ".
@@ -45,19 +54,41 @@ class Content
         return self::returnMappedContent($result);
     }
 
+    /**
+     * WIP: Delete content
+     *
+     * @param string $username
+     * @param string $uuid
+     */
     public static function delete($username, $uuid)
     {
-        $queryString =  " MATCH (usr:User { username: {u} }) WITH usr MATCH (p:Content { uuid:{uuid} } )-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u) u=usr as owner ";
-        $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username, 'uuid' => $uuid));
+        $queryString = "MATCH (usr:User { username: { u }}) "
+            . "WITH usr "
+            . "MATCH (p:Content { uuid: { uuid }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u) "
+            . "u = usr as owner";
+
+        $query = new Query(
+            Neo4jClient::client(),
+            $queryString,
+            array(
+                'u' => $username,
+                'uuid' => $uuid
+            )
+        );
+
         $result = $query->getResultSet();
 
         if (!empty($result)) {
             //delete
         }
-
-        return self::returnMappedContent($result);
     }
 
+    /**
+     * WIP: Edit content
+     *
+     * @param  Content   $content Content to edit
+     * @return Content[]
+     */
     public static function edit(Content $content)
     {
         /*
@@ -106,46 +137,65 @@ class Content
         $result = $query->getResultSet();
 
         return self::returnMappedContent($result);
-
     }
 
+    /**
+     * Gets content by UUID
+     *
+     * @param  string    $username Username
+     * @param  string    $uuid     Content UUID
+     * @return Content[]
+     */
     public static function getContentItemByUUID($username, $uuid)
     {
-        $queryString =  "MATCH (usr:User { username: {u} }) WITH usr MATCH (p:Content { contentId: {uuid} } )-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u) return p, u.username as username, u=usr as owner";
-        $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username, 'uuid' => $uuid));
-        $result = $query->getResultSet();
-
-        return self::returnMappedContent($result);
-    }
-
-    public static function getContentItem($id)
-    {
-        $queryString =  " START p=node({nodeId}) ".
-                        " MATCH p-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u) ".
-                        " RETURN p, u.username  as username, false as owner ";
-        $query = new Query(Neo4jClient::client(), $queryString, array('nodeId' => $id));
-        $result = $query->getResultSet();
-
-        return self::returnMappedContent($result);
-    }
-
-    public static function getContent($username, $s)
-    {
-        // we're doing LIMIT 4. At present we're only displaying 3. the extra
-        // item is to ensure there's more to view, so the next skip will be 3,
-        // then 6, then 12
-        $queryString = "MATCH (u:User {username: {u} })-[:FOLLOWS*0..1]->f "
-            . "WITH DISTINCT f, u "
-            . "MATCH f-[:LASTPOST]-lp-[:NEXTPOST*0..]-p "
-            . "RETURN p, f.username as username, f=u as owner "
-            . "ORDER BY p.timestamp desc SKIP {s} LIMIT 4";
+        $queryString = <<<CYPHER
+MATCH (usr:User { username: { u }})
+WITH usr
+MATCH (p:Content { contentId: { uuid }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u)
+RETURN p, u.username AS username, u = usr AS owner
+CYPHER;
 
         $query = new Query(
             Neo4jClient::client(),
             $queryString,
             array(
                 'u' => $username,
-                's' => $s
+                'uuid' => $uuid,
+            )
+        );
+
+        $result = $query->getResultSet();
+
+        return self::returnMappedContent($result);
+    }
+
+    /**
+     * Gets content from user's friends
+     *
+     * We're doing LIMIT 4. At present we're only displaying 3. the extra
+     * item is to ensure there's more to view, so the next skip will be 3,
+     * then 6, then 12
+     *
+     * @param  string    $username
+     * @param  int       $skip     Records to skip
+     * @return Content[]
+     */
+    public static function getContent($username, $skip)
+    {
+        $queryString = <<<CYPHER
+MATCH (u:User { username: { u }})-[:FOLLOWS*0..1]->f
+WITH DISTINCT f, u
+MATCH f-[:LASTPOST]-lp-[:NEXTPOST*0..]-p
+RETURN p, f.username as username, f=u as owner
+ORDER BY p.timestamp desc SKIP {skip} LIMIT 4
+CYPHER;
+
+        $query = new Query(
+            Neo4jClient::client(),
+            $queryString,
+            array(
+                'u' => $username,
+                'skip' => $skip,
             )
         );
         $result = $query->getResultSet();
@@ -153,12 +203,31 @@ class Content
         return self::returnMappedContent($result);
     }
 
-    public static function returnMappedContent($results)
+    /**
+     * Get content by node id
+     *
+     * @param  int     $id Node id
+     * @return Content
+     */
+    public static function getByNodeId($id)
+    {
+        $node = Neo4jClient::client()->getNode($id);
+
+        return self::createFromNode($node);
+    }
+
+    /**
+     * Creates array of Content from ResultSet
+     *
+     * @param  ResultSet $results
+     * @return Content[]
+     */
+    protected static function returnMappedContent(ResultSet $results)
     {
         $mappedContentArray = array();
 
         foreach ($results as $row) {
-            $mappedContentArray[] = self::fromMappedContentArray(
+            $mappedContentArray[] = self::createFromNode(
                 $row['p'],
                 $row['username'],
                 $row['owner']
@@ -168,32 +237,26 @@ class Content
         return $mappedContentArray;
     }
 
-    public static function fromMappedContentArray(Node $cnode, $username, $owner)
+    /**
+     * Creates Content instance from a content node
+     *
+     * @param  Node    $node     Content node
+     * @param  string  $username Username for post
+     * @param  string  $owner    Content owner
+     * @return Content
+     */
+    protected static function createFromNode(Node $node, $username = null, $owner = null)
     {
-        $content = new Content();
-        $content->id = $cnode->getId();
-        $content->title = $cnode->getProperty('title');
-        $content->url = $cnode->getProperty('url');
-        $content->tagstr = $cnode->getProperty('tagstr');
-        $content->uuid = $cnode->getProperty('contentId');
-        $content->timestamp = gmdate("F j, Y g:i a", $cnode->getProperty('timestamp'));
-        $content->owner = $owner;
-        $content->userNameForPost = $username;
-        $content->node = $content;
-
-        return $content;
-    }
-
-    public static function getByNodeId($id)
-    {
-        $node = Neo4jClient::client()->getNode($id);
         $content = new Content();
         $content->id = $node->getId();
         $content->title = $node->getProperty('title');
         $content->url = $node->getProperty('url');
-        $content->url = $node->getProperty('tagstr');
-        $content->uuid = $node->getProperty('uuid');
-        $content->node = $node;
+        $content->tagstr = $node->getProperty('tagstr');
+        $content->uuid = $node->getProperty('contentId');
+        $content->timestamp = gmdate("F j, Y g:i a", $node->getProperty('timestamp'));
+        $content->owner = $owner;
+        $content->userNameForPost = $username;
+        $content->node = $content;
 
         return $content;
     }

@@ -11,8 +11,10 @@ require_once APPLICATION_PATH . '/vendor/autoload.php';
 
 use GraphStory\GraphKit\Exception\JsonResponseEncodingException;
 use GraphStory\GraphKit\Neo4jClient;
-use GraphStory\GraphKit\Service\Content;
-use GraphStory\GraphKit\Service\User;
+use GraphStory\GraphKit\Model\Content;
+use GraphStory\GraphKit\Model\User;
+use GraphStory\GraphKit\Service\ContentService;
+use GraphStory\GraphKit\Service\UserService;
 use GraphStory\GraphKit\Slim\JsonResponse;
 use GraphStory\GraphKit\Slim\Middleware\Navigation;
 use Monolog\Handler\StreamHandler;
@@ -43,6 +45,9 @@ $neo4jClient->getTransport()->setAuth(
 if ($config['graphStory']['https']) {
     $neo4jClient->getTransport()->useHttps();
 }
+
+// neo client
+Neo4jClient::setClient($neo4jClient);
 
 $app = new Slim($config['slim']);
 
@@ -82,9 +87,6 @@ $app->error(function (\Exception $e) use ($app) {
     $app->render('errors/500-guest.mustache');
 });
 
-// neo client
-Neo4jClient::setClient($neo4jClient);
-
 $app->view(new Mustache());
 $app->view->parserOptions = $config['mustache'];
 $app->view->appendData(array('copyrightYear' => date('Y')));
@@ -112,7 +114,7 @@ $app->post('/user/add', function () use ($app) {
         $username = strtolower(trim($username));
 
         // see if there's already a User node with this username
-        $checkuser = User::getByUsername($username);
+        $checkuser = UserService::getByUsername($username);
 
         // No? then save it
         if (is_null($checkuser)) {
@@ -120,7 +122,7 @@ $app->post('/user/add', function () use ($app) {
             $user = new User();
             $user->username = $username;
             // save it
-            User::save($user);
+            UserService::save($user);
 
             // Authenticate user
             $_SESSION['username'] = $username;
@@ -155,7 +157,7 @@ $app->post('/login', function () use ($app) {
     if (!empty($username)) {
         // lower case the username.
         $username = strtolower($username);
-        $checkuser = User::getByUsername($username);
+        $checkuser = UserService::getByUsername($username);
 
         // match
         if (!is_null($checkuser)) {
@@ -186,28 +188,30 @@ start Social Graph
 
 // social - show user form
 $app->get('/user', $isLoggedIn, function () use ($app) {
-    $user = User::getByUsername($_SESSION['username']);
-    $app->render('graphs/social/user.mustache', array('user' => $user));
+    $user = UserService::getByUsername($_SESSION['username']);
+    $app->render('graphs/social/user.mustache', array(
+        'user' => $user,
+    ));
 });
 
 // social - edit a user
 $app->put('/user/edit', function () use ($app) {
-    $request = $app->request();
-    $usrparams = json_decode($request->getBody());
+    $params = json_decode($app->request->getBody());
 
-    $user = User::getByUsername($_SESSION['username']);
-    $user->firstname = $usrparams->firstname;
-    $user->lastname = $usrparams->lastname;
-    User::save($user);
+    $user = UserService::getByUsername($_SESSION['username']);
+    $user->firstname = $params->firstname;
+    $user->lastname = $params->lastname;
+
+    UserService::save($user);
 
     $app->jsonResponse->build($user);
 });
 
 // social - friends - get list of friends and search for new ones
 $app->get('/friends', $isLoggedIn, function () use ($app) {
-    $user = User::getByUsername($_SESSION['username']);
-    $following = User::following($_SESSION['username']);
-    $suggestions = User::friendSuggestions($_SESSION['username']);
+    $user = UserService::getByUsername($_SESSION['username']);
+    $following = UserService::following($_SESSION['username']);
+    $suggestions = UserService::friendSuggestions($_SESSION['username']);
 
     $app->render('graphs/social/friends.mustache', array(
         'user' => $user,
@@ -217,9 +221,9 @@ $app->get('/friends', $isLoggedIn, function () use ($app) {
 });
 
 // takes current user session and will follow :username, e.g. one way follow
-$app->get('/follow/:username', function ($username) use ($app) {
-    $rel = User::followUser($_SESSION['username'], $username);
-    $following =  User::following($_SESSION['username']);
+$app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
+    UserService::followUser($_SESSION['username'], $userToFollow);
+    $following = UserService::following($_SESSION['username']);
 
     $app->jsonResponse->build(
         array('following' => $following)
@@ -227,9 +231,9 @@ $app->get('/follow/:username', function ($username) use ($app) {
 });
 
 // takes current user session and will follow :username, e.g. one way follow
-$app->get('/unfollow/:username', function ($username) use ($app) {
-    $rel = User::unfollowUser($_SESSION['username'], $username, $app);
-    $following =  User::following($_SESSION['username']);
+$app->get('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) {
+    UserService::unfollowUser($_SESSION['username'], $userToUnfollow);
+    $following = UserService::following($_SESSION['username']);
 
     $app->jsonResponse->build(
         array('following' => $following)
@@ -237,8 +241,8 @@ $app->get('/unfollow/:username', function ($username) use ($app) {
 });
 
 //search users by name
-$app->get('/searchbyusername/:u', function ($u) use ($app) {
-    $users = User::searchByUsername($u, $_SESSION['username']);
+$app->get('/searchbyusername/:search', function ($search) use ($app) {
+    $users = UserService::searchByUsername($search, $_SESSION['username']);
 
     $app->jsonResponse->build(
         array('users' => $users)
@@ -247,7 +251,7 @@ $app->get('/searchbyusername/:u', function ($u) use ($app) {
 
 // social - show posts
 $app->get('/posts', $isLoggedIn, function () use ($app) {
-    $content = Content::getContent($_SESSION['username'], 0);
+    $content = ContentService::getContent($_SESSION['username'], 0);
     $socialContent = array_slice($content, 0, 3);
     $moreContent = (count($content) >= 4);
 
@@ -259,8 +263,8 @@ $app->get('/posts', $isLoggedIn, function () use ($app) {
 })->name('social-graph');
 
 // social - return posts via JSON
-$app->get('/postsfeed/:s', $isLoggedIn, function ($s) use ($app) {
-    $content =  Content::getContent($_SESSION['username'], (int) $s);
+$app->get('/postsfeed/:skip', $isLoggedIn, function ($skip) use ($app) {
+    $content = ContentService::getContent($_SESSION['username'], (int) $skip);
     $app->jsonResponse->build(
         array('content' => $content)
     );
@@ -268,7 +272,7 @@ $app->get('/postsfeed/:s', $isLoggedIn, function ($s) use ($app) {
 
 // social - show post
 $app->get('/viewpost/:postId', $isLoggedIn, function ($postId) use ($app) {
-    $post =  Content::getContentItemByUUID($_SESSION['username'], $postId);
+    $post = ContentService::getContentItemByUUID($_SESSION['username'], $postId);
     $content = new Content();
 
     if (!empty($post)) {
@@ -284,17 +288,18 @@ $app->get('/viewpost/:postId', $isLoggedIn, function ($postId) use ($app) {
 // social - add a post
 $app->post('/posts/add', function () use ($app) {
     $request = $app->request();
-    $body = $request->getBody();
     $contentParams = json_decode($request->getBody());
+
     $content = new Content();
     $content->title = $contentParams->title;
     $content->url = $contentParams->url;
+
     // are tags set?
     if (isset($contentParams->tagstr)) {
         $content->tagstr = $contentParams->tagstr;
     }
 
-    $post = Content::add($_SESSION['username'], $content);
+    $post = ContentService::add($_SESSION['username'], $content);
 
     $app->jsonResponse->build($post[0]);
 });
@@ -305,8 +310,7 @@ $app->post('/posts/edit', function () use ($app) {
 });
 
 // social - remove a post
-$app->get('/posts/remove/:postId', function ($postId) use ($app) {
-
+$app->delete('/posts/remove/:postId', function ($postId) use ($app) {
 });
 
 /********************************
@@ -325,7 +329,6 @@ $app->get('/mytags/add/:tags', function ($tags) use ($app) {
 });
 
 //filter based on my non-owned posts and specific tag
-
 
 /********************************
 start Consumption Graph
@@ -370,7 +373,7 @@ $app->get('/social', function () use ($app) {
 });
 
 $app->get('/user/:id', function ($id) use ($app) {
-    $user = User::getByNodeId($id);
+    $user = UserService::getByNodeId($id);
     $body = 'sup world';
     $app->render('index.mustache', array(
         'title' => $user->name,
