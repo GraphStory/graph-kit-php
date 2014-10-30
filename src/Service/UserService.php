@@ -167,7 +167,7 @@ CYPHER;
      */
     public static function following($username)
     {
-        $queryString = "MATCH (user { username:{u}})-[:FOLLOWS]->(users) RETURN users ORDER BY users.username";
+        $queryString = "MATCH (user { username:{u}}) WITH user MATCH (user)-[:FOLLOWS]->(users) RETURN users ORDER BY users.username";
         $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username));
         $result = $query->getResultSet();
 
