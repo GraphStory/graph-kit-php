@@ -167,10 +167,10 @@ function updateUser(url) {
         dataType: "json",
         data: userformToJSON(),
         success: function(data, textStatus, jqXHR){
-            alert('User updated');
+            showAlert('success', 'User updated');
         },
         error: function(jqXHR, textStatus, errorThrown){
-            alert('User update error: ' + textStatus);
+            showAlert('error', 'User update error: ' + textStatus);
         }
     });
 }
@@ -229,7 +229,7 @@ function addContent(url) {
             $("#addcontent").text('Add Content');
         },
         error: function(jqXHR, textStatus, errorThrown){
-            alert('Add content error: ' + errorThrown);
+            showAlert('error','Add content error: ' + errorThrown);
         }
     });
 }
@@ -256,10 +256,10 @@ function updateContent(url) {
             $("#contentform")[0].reset();
             $("#contentform").hide();
 
-            alert('Content updated');
+            showAlert('success', 'Content updated');
         },
         error: function(jqXHR, textStatus, errorThrown){
-            alert('Content update error: ' + textStatus);
+            showAlert('error', 'Content update error: ' + textStatus);
         }
     });
 }
@@ -278,7 +278,7 @@ function createUserProductViewRel(productNodeId){
 
         },
         error: function(jqXHR, textStatus, errorThrown){
-            alert('createUserProductViewRel add error: ' + textStatus);
+            showAlert('error','createUserProductViewRel add error: ' + textStatus);
         }
     });
 }
@@ -456,6 +456,20 @@ function loadMoArProducts(){
 function postFeedLoad(){
     // you could do somthing here if necessary after a new page loads via jscroll.
     // I added this because that does happen. you're welcome.
+}
+
+function showAlert(level, message){
+    var block = $('#alert-block');
+    block.addClass('alert-' + level);
+    block.html(message);
+    block.show();
+    if (level != 'error'){
+        setTimeout(function(){
+        block.fadeOut();
+        block.removeClass('alert-' + level);
+        block.hide();
+    }, 3000);
+    }
 }
 
 function resetForm(form) {
