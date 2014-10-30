@@ -55,11 +55,14 @@ class UserService
     public static function friendSuggestions($username)
     {
         $queryString = <<<CYPHER
-MATCH (u:User), (user:User { username: {username} })
+MATCH (u:User), (user:User { username:{username}})
 WHERE u <> user
 AND (NOT (user)-[:FOLLOWS]->(u))
-RETURN u
-LIMIT 5
+OPTIONAL MATCH (user)-[:FOLLOWS]->(u2)<-[:FOLLOWS]-(u)
+WHERE u2 <> u
+RETURN u, count(u2) as common
+ORDER BY common DESC
+LIMIT
 CYPHER;
 
         $query = new Query(
@@ -217,9 +220,12 @@ CYPHER;
     protected static function returnAsUsers(ResultSet $results)
     {
         $userArray = array();
-
         foreach ($results as $row) {
-            $userArray[] = self::fromNode($row['x']);
+            $user = self::fromArray($row['x']);
+            if (isset($row['common'])){
+                $user->commonFriends = $row['common'];
+            }
+            $userArray[] = $user;
         }
 
         return $userArray;

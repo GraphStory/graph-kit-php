@@ -9,4 +9,5 @@ class User
     public $username;
     public $firstname;
     public $lastname;
+    public $commonFriends;
 }
