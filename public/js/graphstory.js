@@ -1,5 +1,5 @@
 $( document ).ready(function() {
-    getTags();
+    // getTags();
     searchProducts();
     menu();
     // loadMoArProducts();
@@ -8,18 +8,17 @@ $( document ).ready(function() {
 function menu(){
     var pgurl = window.location.href;
     $("#socialli").addClass("active");
-    $("#graphstorynav li a").each(function(){
+    $("#graphstorynav li a").each(function() {
 
-        if(pgurl.indexOf($(this).attr("href")) > -1){
+        if (pgurl.indexOf($(this).attr("href")) > -1) {
             $("#socialli").removeClass("active");
             $(this).parent().addClass("active");
         }
-
     });
 }
 
 $('#updateUser').on("click", function() {
-    updateUser();
+    updateUser($(this).data('url'));
     return false;
 });
 
@@ -28,35 +27,33 @@ $('#socialfriendsearch').on("click", function() {
     return false;
 });
 
-$('#userstoadd').on('click', 'a.addfriend', function() {
-    addfriend($(this).attr('id'));
-    $(this).closest("tr").remove();
-    return false;
-});
-
-$('#suggestions').on('click', 'a.addfriend', function() {
-    addfriend($(this).attr('id'));
+$('.to-follow').on('click', 'a.addfriend', function() {
+    addfriend($(this).closest("table").data('url'), $(this).attr('id'));
     $(this).closest("tr").remove();
     return false;
 });
 
 $('#following').on('click', 'a.removefriend', function() {
-    removefriend($(this).attr('id'));
+    removefriend($(this).data('url'), $(this).attr('id'));
     return false;
 });
 
 $('#morecontent').on('click', 'a.next', function() {
-    getcontent(parseInt($("#contentcount").val())+1);
+    getcontent(
+        $("table#content").data("moreContentUrl"),
+        parseInt($("#contentcount").val()) + 1
+    );
     return false;
 });
 
 $('#contentAddEdit').on('click', 'a#addcontent', function() {
-    if ( $("#contentform").is(":visible") ) {
+    if ($("#contentform").is(":visible")) {
         $("#addcontent").text('Add Content');
-        $("#contentform")[0].reset();
+        resetForm($("#contentform"));
         $("#contentform").hide();
     } else {
         $("#contentform").show();
+        $("#contentform")[0].reset();
         $("#addcontent").text("Cancel");
         $("#btnSaveContent").text('Add Content');
     }
@@ -64,54 +61,60 @@ $('#contentAddEdit').on('click', 'a#addcontent', function() {
     return false;
 });
 
-
 $('#btnSaveContent').click(function() {
-    if ($('#contentId').val() === undefined){
-        addContent();
-        return false;
+    var uuid = $('#contentuuid').val();
+    if (!uuid){
+        addContent($(this).data('url'));
     } else {
-        updateContent();
-        return false;
+        updateContent($(this).data('url'));
     }
+
+    return false;
 });
 
-$('body').on('click','a.deleteContent', function() {
+$('button.deletecontent').on('click', function() {
     var id = $(this).attr('id');
     id = id.replace("delete_","");
 
+    $("#delete-modal").modal('show');
+
     $.ajax({
-        type: 'GET',
-        url: '/posts/delete/' + id,
+        type: 'DELETE',
+        url: '/posts/' + id,
         success: function(data, textStatus, jqXHR){
-            id = "tr#_"+id;
+            id = "#tr_"+id;
             $(id).remove();
-            alert('Content deleted');
+            $("#delete-modal").modal('hide');
         }
     });
 
     return false;
 });
 
-$('body').on('click','a.editcontent', function() {
+$('button.editcontent').on('click', function() {
     var id = $(this).attr('id');
     id = id.replace("edit_","");
 
-    if ( $("#contentform").is(":visible") ) {
+    if ($("#contentform").is(":visible")) {
         $("#addcontent").text('Add Content');
-        $("#contentform")[0].reset();
+        resetForm($("#contentform"));
         $("#contentform").hide();
-    }else{
+    } else {
         var p = $("#contentAddEdit").position();
+
         $(window).scrollTop(p.top);
+
         $("#contentform").show();
         $("#addcontent").text("Cancel");
-        $("#contentId").val(id);
-        $("#title").val($("#url_"+id).text());
-        $("#url").val($("#url_"+id).attr('href'));
+
+        $("#contentuuid").val(id);
+        $("#title").val($("#url_" + id).text());
+        $("#url").val($("#url_" + id).attr('href'));
+
         $("#tagstr").val($("#tags_"+id).text());
         $("#btnSaveContent").text('Edit Content');
-
     }
+
     return false;
 });
 
@@ -156,11 +159,11 @@ $('td').on('click','a.productNodeId', function() {
             return false;
 });
 
-function updateUser() {
+function updateUser(url) {
     $.ajax({
         type: 'PUT',
         contentType: 'application/json',
-        url: '/user/edit',
+        url: url,
         dataType: "json",
         data: userformToJSON(),
         success: function(data, textStatus, jqXHR){
@@ -181,43 +184,43 @@ function searchByUsername(u) {
     });
 }
 
-function addfriend(u) {
+function addfriend(url, username) {
     $.ajax({
         type: 'GET',
-        url: '/follow/'+u,
+        url: url + username,
         dataType: "json",
         success: renderFollowers
     });
 }
 
-function removefriend(u) {
+function removefriend(url, username) {
     $.ajax({
         type: 'GET',
-        url: '/unfollow/'+u,
+        url: url + username,
         dataType: "json",
         success: renderFollowers
     });
 }
 
-function getcontent(skip){
+function getcontent(url, skip){
     $.ajax({
         type: 'GET',
-        url: '/postsfeed/'+skip,
+        url: url + skip,
         dataType: "json",
         success: showContentStream
     });
 }
 
-function addContent() {
+function addContent(url) {
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
-        url: '/posts/add',
-        dataType: "json",
+        url: url,
+        dataType: "html",
         data: contentformToJSON(),
-        success: function(data, textStatus, jqXHR){
+        success: function(html, textStatus, jqXHR) {
 
-            $('#content').prepend('<tr><td><a href="'+data.url+'" target="_blank">'+data.title+'</a>   <br/>tags: '+data.tagstr+' ::   Posted by '+data.userNameForPost+' at <a href="/viewpost/'+data.contentId+'">'+data.timestamp+'</a><br/></td></tr>');
+            $('#content').prepend(html);
 
             $('#title').val("");
             $('#url').val("");
@@ -231,26 +234,28 @@ function addContent() {
     });
 }
 
-function updateContent() {
-
-    var contentId =$("#contentId").val();
+function updateContent(url) {
+    var uuid = $("#contentuuid").val();
     var json = ConvertFormToJSON($("#contentform"));
-    json=JSON.stringify(json);
-    console.log(json);
+    json = JSON.stringify(json);
+
     $.ajax({
         type: 'PUT',
         contentType: 'application/json',
-        url: '/posts/edit',
-        dataType: "json",
-        data: json,
-        success: function(data, textStatus, jqXHR){
+        url: url,
+        dataType: 'html',
+        data: contentformToJSON(),
+        success: function(html, textStatus, jqXHR){
+            console.debug(html);
+            console.debug("#tr_" + uuid);
 
-            $("#url_"+contentId).text(data.title);
-            $("#url_"+contentId).attr('href',data.url);
-            $("#tags_"+contentId).text(data.tagstr);
+            $("#tr_" + uuid).replaceWith(html);
+
             $("#addcontent").text('Add Content');
+
             $("#contentform")[0].reset();
             $("#contentform").hide();
+
             alert('Content updated');
         },
         error: function(jqXHR, textStatus, errorThrown){
@@ -300,6 +305,7 @@ function renderFollowers(data) {
     if (list.length <= 0 ) {
         $('#following').append('<tr><td>No Friends<td></tr>');
     }
+
     $.each(list, function(index, following) {
         $('#following').append('<tr><td>' + following.username + '<td><td><a href="#" id="' + following.username + '" class="removefriend">Remove</a></td></tr>');
     });
@@ -309,16 +315,15 @@ function showContentStream(data) {
     var list = data == null ? [] : (data.content instanceof Array ? data.content : [data.content]);
     $tr = $('#morecontent');
     $tr.hide();
-    $.each(list, function (index, content) {
-        if (index < 3) {
-            var id = content.contentId;
-            ti = (content.owner ? '<a class="editcontent" id="edit_' + id + '">Edit</a> <a class="deletecontent" id="delete_' + id + '">Delete</a>' : '');
 
-            $('#content').append('<tr id="_' + id + '"><td><a href="' + content.url + '" id="url_' + id + '" target="_blank">' + content.title + '</a> ' + ti + '<br/>tags:<span id="tags_' + id + '">' + content.tagstr + '</span> ::   Posted by ' + content.userNameForPost + ' at <a href="/viewpost/' + content.contentId + '">' + content.timestampAsStr + '</a> </td></tr>');
+    $.each(list, function (index, content) {
+        console.debug(content);
+        if (index < 3) {
+            $('#content').append(content);
         }
     });
 
-    if (list.length>=4) {
+    if (list.length >= 4) {
         contentcount = parseInt($("#contentcount").val()) + 3;
         $("#contentcount").val(contentcount);
         $('#content').append($tr);
@@ -337,9 +342,9 @@ function userformToJSON() {
 function contentformToJSON() {
 
     if($("#tagstr").length == 0) {
-        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val() });
+        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "uuid": $('#contentuuid').val() });
     }else{
-        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "tagstr": $('#tagstr').val() });
+        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "tagstr": $('#tagstr').val(), "uuid": $('#contentuuid').val() });
     }
 }
 
@@ -354,82 +359,80 @@ function ConvertFormToJSON(form){
     return json;
 }
 
-function getTags(){
+// TODO: NOT IN USE
+function getTags() {
     // get tags via autocomplete - THIS IS FOR THE SOCIAL GRAPH / CONTENT SECTION
     $(document).on('keyup.autocomplete','input[name="tagstr"]', function(event){
-        if (event.keyCode === $.ui.keyCode.TAB && $( this ).data( "autocomplete" ).menu.active )
-            {
-                event.preventDefault();
-            }
+        if (event.keyCode === $.ui.keyCode.TAB && $( this ).data( "autocomplete" ).menu.active ) {
+            event.preventDefault();
+        }
 
-            if(event.keyCode === $.ui.keyCode.COMMA){
-                this.value = this.value+" ";
-            }
+        if(event.keyCode === $.ui.keyCode.COMMA) {
+            this.value = this.value+" ";
+        }
 
-            $(this).autocomplete({
-
-                source: function( request, response ) {
-                    $.getJSON(  "/tag/" + extractLast( request.term.toLowerCase() ) + ".json", response );
-                },
-                search: function() {
-                    // custom minLength
-                    var term = extractLast( this.value );
-                    if ( term.length < 2 ) {
-                        return false;
-                    }
-                },
-                focus: function() {
-                    // prevent value inserted on focus
-                    return false;
-                },
-                select: function( event, ui ) {
-
-                    var terms = split( this.value );
-                    // remove the current input
-                    terms.pop();
-
-                    // add the selected item
-                    terms.push( ui.item.value );
-                    // add placeholder to get the comma-and-space at the end
-                    terms.push( "" );
-                    this.value = terms.join( "," );
-                    this.value = this.value + " ";
+        $(this).autocomplete({
+            source: function( request, response ) {
+                $.getJSON(  "/tag/" + extractLast( request.term.toLowerCase() ) + ".json", response );
+            },
+            search: function() {
+                // custom minLength
+                var term = extractLast( this.value );
+                if ( term.length < 2 ) {
                     return false;
                 }
-            });
+            },
+            focus: function() {
+                // prevent value inserted on focus
+                return false;
+            },
+            select: function( event, ui ) {
+
+                var terms = split( this.value );
+                // remove the current input
+                terms.pop();
+
+                // add the selected item
+                terms.push( ui.item.value );
+                // add placeholder to get the comma-and-space at the end
+                terms.push( "" );
+                this.value = terms.join( "," );
+                this.value = this.value + " ";
+                return false;
+            }
+        });
     });
 }
 
-function searchProducts(){
+// TODO: NOT IN USE
+function searchProducts() {
     // get products via autocomplete - THIS IS FOR THE LOCATION GRAPH SECTION
     $(document).on('keyup.autocomplete','input[name="product"]', function(event){
-        if (event.keyCode === $.ui.keyCode.TAB && $( this ).data( "autocomplete" ).menu.active )
-            {
-                event.preventDefault();
+        if (event.keyCode === $.ui.keyCode.TAB && $( this ).data( "autocomplete" ).menu.active ) {
+            event.preventDefault();
+        }
+
+        if(event.keyCode === $.ui.keyCode.COMMA) {
+            this.value = this.value+" ";
+        }
+
+        $(this).autocomplete({
+            source: function( request, response ) {
+                $.getJSON(  "/productsearch/" + extractLast( request.term.toLowerCase() ) + ".json", response );
+            },
+            search: function() {
+                // custom minLength
+            },
+            focus: function() {
+                // prevent value inserted on focus
+                return false;
+            },
+            select: function( event, ui ) {
+                this.value = ui.item.value;
+                $("#productNodeId").val(ui.item.id);
+                return false;
             }
-
-            if(event.keyCode === $.ui.keyCode.COMMA){
-                this.value = this.value+" ";
-            }
-
-            $(this).autocomplete({
-
-                source: function( request, response ) {
-                    $.getJSON(  "/productsearch/" + extractLast( request.term.toLowerCase() ) + ".json", response );
-                },
-                search: function() {
-                    // custom minLength
-                },
-                focus: function() {
-                    // prevent value inserted on focus
-                    return false;
-                },
-                select: function( event, ui ) {
-                    this.value = ui.item.value;
-                    $("#productNodeId").val(ui.item.id);
-                    return false;
-                }
-            });
+        });
     });
 }
 
@@ -453,4 +456,12 @@ function loadMoArProducts(){
 function postFeedLoad(){
     // you could do somthing here if necessary after a new page loads via jscroll.
     // I added this because that does happen. you're welcome.
+}
+
+function resetForm(form) {
+    form[0].reset();
+
+    form.find("input:hidden").each(function() {
+        $(this).val("");
+    });
 }
