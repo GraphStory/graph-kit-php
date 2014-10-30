@@ -63,6 +63,13 @@ class UserServiceTest extends GraphKitTestCase
 
     }
 
+    public function testSuggestions()
+    {
+        $this->buildRealClient();
+        $this->clearDB();
+        $this->loadGraph();
+    }
+
     private function createUser($randomized = false)
     {
         $user = $this->standardUser;

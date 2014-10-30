@@ -31,4 +31,15 @@ class GraphKitTestCase extends \PHPUnit_Framework_TestCase
     {
         return $this->sendQuery('MATCH (n) OPTIONAL MATCH (n)-[r]-() DELETE r,n');
     }
+
+    protected function loadGraph()
+    {
+        $cqs = file_get_contents(__DIR__.'/GKP_IMPORT.cqs');
+        $statements = explode(';', $cqs);
+        $end = count($statements);
+        unset($statements[$end-1]);
+        foreach ($statements as $statement) {
+            $this->sendQuery(trim($statement));
+        }
+    }
 }
