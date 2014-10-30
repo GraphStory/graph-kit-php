@@ -462,9 +462,11 @@ function showAlert(level, message){
     var block = $('#alert-block');
     block.addClass('alert-' + level);
     block.html(message);
-    block.show('slow');
+    block.show();
     setTimeout(function(){
-        block.fadeOut()
+        block.fadeOut();
+        block.removeClass('alert-' + level);
+        block.hide();
     }, 3000);
 }
 
