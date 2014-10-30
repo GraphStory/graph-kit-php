@@ -62,7 +62,7 @@ OPTIONAL MATCH (user)-[:FOLLOWS]->(u2)<-[:FOLLOWS]-(u)
 WHERE u2 <> u
 RETURN u, count(u2) as common
 ORDER BY common DESC
-LIMIT
+LIMIT 5
 CYPHER;
 
         $query = new Query(
