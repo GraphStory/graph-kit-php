@@ -85,7 +85,9 @@ CYPHER;
     public static function collaborativeFriendSuggestions($username)
     {
         $queryString = <<<CYPHER
-MATCH (u:User { username: { username }})-[:FOLLOWS]->(friend),
+MATCH (u:User { username: { username }})
+WITH u
+MATCH (u)-[:FOLLOWS]->(friend),
 (friend)-[:FOLLOWS]->(FoF)
 WHERE NOT (u = FoF)
 AND NOT (u--FoF)
@@ -115,7 +117,7 @@ CYPHER;
     public static function searchByUsername($username, $currentusername)
     {
         $username = $username.'.*';
-        $queryString = "MATCH (n:User), (user { username:{c}}) WHERE (n.username =~ {u} AND n <> user) AND (NOT (user)-[:FOLLOWS]->(n)) RETURN n";
+        $queryString = "MATCH (n:User), (user:User { username:{c}}) WHERE (n.username =~ {u} AND n <> user) AND (NOT (user)-[:FOLLOWS]->(n)) RETURN n";
         $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username,'c' => $currentusername));
         $result = $query->getResultSet();
 
@@ -146,7 +148,7 @@ CYPHER;
      */
     public static function unfollowUser($username, $userToUnfollow)
     {
-        $queryString = "MATCH (n1 { username: {u} })-[r:FOLLOWS]-(n2 { username: {f} }) DELETE  r";
+        $queryString = "MATCH (n1:User { username: {u} }) WITH n1 MATCH (n1)-[r:FOLLOWS]-(n2 { username: {f} }) DELETE  r";
         $query = new Query(
             Neo4jClient::client(),
             $queryString,
