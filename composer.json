@@ -22,6 +22,10 @@
             "email": "jeremy.kendall@graphstory.com",
             "homepage": "http://graphstory.com",
             "role": "Contributor"
+        },
+        {
+            "name": "Contributors",
+            "homepage": "https://github.com/GraphStory/graph-kit-php/graphs/contributors"
         }
     ],
     "support": {
@@ -41,7 +45,11 @@
     },
     "autoload": {
         "psr-4": {
-            "GraphStory\\GraphKit\\": "src/",
+            "GraphStory\\GraphKit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "GraphStory\\Tests\\": "tests/"
         }
     }
