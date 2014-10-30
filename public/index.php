@@ -228,20 +228,42 @@ $app->get('/friends', $isLoggedIn, function () use ($app) {
 // takes current user session and will follow :username, e.g. one way follow
 $app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
     UserService::followUser($_SESSION['username'], $userToFollow);
+
     $following = UserService::following($_SESSION['username']);
+    $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
+    $return = array();
+
+    foreach ($following as $friend) {
+        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+
+        $return[] = $app->view
+            ->getInstance()
+            ->render('graphs/social/friends-partial', $content);
+    }
 
     $app->jsonResponse->build(
-        array('following' => $following)
+        array('following' => $return)
     );
 })->name('social-follow');
 
-// takes current user session and will follow :username, e.g. one way follow
-$app->get('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) {
+// takes current user session and will unfollow :username
+$app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) {
     UserService::unfollowUser($_SESSION['username'], $userToUnfollow);
+
     $following = UserService::following($_SESSION['username']);
+    $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
+    $return = array();
+
+    foreach ($following as $friend) {
+        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+
+        $return[] = $app->view
+            ->getInstance()
+            ->render('graphs/social/friends-partial', $content);
+    }
 
     $app->jsonResponse->build(
-        array('following' => $following)
+        array('following' => $return)
     );
 })->name('social-unfollow');
 

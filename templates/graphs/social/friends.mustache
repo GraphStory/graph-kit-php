@@ -11,10 +11,7 @@
         <h3>Current Friends</h3>
         <table class="table" id="following">
             {{# following }}
-            <tr>
-                <td>{{ username }}</td>
-                <td><a href="#" id="{{ username }}" class="removefriend" data-url="{{ unfollowUrl }}">Remove</a></td>
-            </tr>
+                {{> graphs/social/friends-partial }}
             {{/ following }}
         </table>
     </div>

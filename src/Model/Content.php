@@ -18,6 +18,7 @@ class Content
     public function toArray()
     {
         return array(
+            'node' => $this->node,
             'id' => $this->id,
             'title' => $this->title,
             'url' => $this->url,
@@ -27,7 +28,6 @@ class Content
             'contentId' => $this->uuid,
             'userNameForPost' => $this->userNameForPost,
             'owner' => $this->owner,
-            'node' => $this->node,
         );
     }
 }

@@ -195,7 +195,7 @@ function addfriend(url, username) {
 
 function removefriend(url, username) {
     $.ajax({
-        type: 'GET',
+        type: 'DELETE',
         url: url + username,
         dataType: "json",
         success: renderFollowers
@@ -246,9 +246,6 @@ function updateContent(url) {
         dataType: 'html',
         data: contentformToJSON(),
         success: function(html, textStatus, jqXHR){
-            console.debug(html);
-            console.debug("#tr_" + uuid);
-
             $("#tr_" + uuid).replaceWith(html);
 
             $("#addcontent").text('Add Content');
@@ -307,7 +304,7 @@ function renderFollowers(data) {
     }
 
     $.each(list, function(index, following) {
-        $('#following').append('<tr><td>' + following.username + '<td><td><a href="#" id="' + following.username + '" class="removefriend">Remove</a></td></tr>');
+        $('#following').append(following);
     });
 }
 
@@ -317,7 +314,6 @@ function showContentStream(data) {
     $tr.hide();
 
     $.each(list, function (index, content) {
-        console.debug(content);
         if (index < 3) {
             $('#content').append(content);
         }
