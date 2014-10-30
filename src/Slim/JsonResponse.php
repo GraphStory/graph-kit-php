@@ -46,7 +46,7 @@ class JsonResponse
 
         if ($json === false) {
             throw new JsonResponseEncodingException(
-                'json_encode failed trying to encode $body.'
+                sprintf('Error JSON encoding $body: %s', json_last_error_msg())
             );
         }
 
