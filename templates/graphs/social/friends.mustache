@@ -13,18 +13,18 @@
             {{# following }}
             <tr>
                 <td>{{ username }}</td>
-                <td><a href="#" id="{{ username }}" class="removefriend">Remove</a></td>
+                <td><a href="#" id="{{ username }}" class="removefriend" data-url="{{ unfollowUrl }}">Remove</a></td>
             </tr>
             {{/ following }}
         </table>
     </div>
     <div class="col-md-4">
         <h3>Friend Suggestions</h3>
-        <table class="table" id="suggestions">
+        <table id="suggestions" class="table to-follow" data-url="{{ followUrl }}">
             {{# suggestions }}
             <tr>
                 <td>{{ username }}</td>
-                <td>({{commonFriends}} friends in common)
+                <td>({{ commonFriends }} mutual friends)</td>
                 <td><a href="#" id="{{ username }}" class="addfriend">Add as Friend</a></td>
             </tr>
             {{/ suggestions }}
@@ -46,7 +46,7 @@
                 </div>
             </div>
         </form>
-        <table class="table" id="userstoadd">
+        <table id="userstoadd" class="table to-follow" data-url="{{ followUrl }}">
         </table>
     </div>
 </div>
