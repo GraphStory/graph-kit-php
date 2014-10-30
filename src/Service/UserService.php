@@ -221,7 +221,7 @@ CYPHER;
     {
         $userArray = array();
         foreach ($results as $row) {
-            $user = self::fromArray($row['x']);
+            $user = self::fromNode($row['x']);
             if (isset($row['common'])){
                 $user->commonFriends = $row['common'];
             }
