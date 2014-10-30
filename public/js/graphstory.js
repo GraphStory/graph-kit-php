@@ -307,7 +307,7 @@ function renderFollowers(data) {
     }
 
     $.each(list, function(index, following) {
-        $('#following').append('<tr><td>' + following.username + '<td><td><a href="#" id="' + following.username + '" class="removefriend">Remove</a></td></tr>');
+        $('#following').append('<tr><td>' + following.username + '<td><td><a href="#" id="' + following.username + '" class="removefriend" data-url="/unfollow/">Remove</a></td></tr>');
     });
 }
 
