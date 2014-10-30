@@ -10,16 +10,6 @@ use GraphStory\GraphKit\Neo4jClient;
 
 class ContentService
 {
-    protected $node = null;
-    public $id = null;
-    public $title = '';
-    public $url = '';
-    public $tagstr = '';
-    public $timestamp = '';
-    public $uuid = '';
-    public $userNameForPost = '';
-    public $owner = false;
-
     /**
      * Adds content
      *
@@ -29,13 +19,15 @@ class ContentService
      */
     public static function add($username, Content $content)
     {
-        $queryString = "MATCH (user { username:{u}}) ".
-            " OPTIONAL MATCH (user)-[r:LASTPOST]->(lastpost) ".
-            " DELETE r ".
-            " CREATE (user)-[:LASTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, uuid:{uuid} }) ".
-            " WITH p, collect(lastpost) as lastposts ".
-            " FOREACH (x IN lastposts |  CREATE p-[:NEXTPOST]->x ) ".
-            " RETURN p, {u}  as username, true as owner ";
+        $queryString =<<<CYPHER
+MATCH (user { username: {u}})
+OPTIONAL MATCH (user)-[r:LASTPOST]->(lastpost)
+DELETE r
+CREATE (user)-[:LASTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, uuid:{uuid} })
+WITH p, collect(lastpost) as lastposts
+FOREACH (x IN lastposts | CREATE p-[:NEXTPOST]->x)
+RETURN p, {u} as username, true as owner
+CYPHER;
 
         $query = new Query(
             Neo4jClient::client(),
@@ -55,88 +47,79 @@ class ContentService
     }
 
     /**
-     * WIP: Delete content
+     * Edit content
      *
-     * @param string $username
-     * @param string $uuid
+     * @param  Content $content Content to edit
+     * @return Content Edited content
+     */
+    public static function edit(Content $content)
+    {
+        $updatedAt = time();
+
+        $node = $content->node;
+        $node->setProperty('title', $content->title);
+        $node->setProperty('url', $content->url);
+        $node->setProperty('tagstr', $content->tagstr);
+        $node->setProperty('updated', $updatedAt);
+        $node->save();
+
+        $content->updated = $updatedAt;
+
+        return $content;
+    }
+
+    /**
+     * Delete content
+     *
+     * @param string $username Username of content owner
+     * @param string $uuid Content id
      */
     public static function delete($username, $uuid)
     {
-        $queryString = "MATCH (usr:User { username: { u }}) "
-            . "WITH usr "
-            . "MATCH (p:Content { uuid: { uuid }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u) "
-            . "u = usr as owner";
+        $isLastPost = self::isLastPost($username, $uuid);
+
+        $queryString = <<<CYPHER
+MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(before),(before)-[delBefore]->(del:Content { uuid: { uuid }})-[delAfter]->(after)
+CREATE UNIQUE (before)-[:NEXTPOST]->(after)
+DELETE del, delBefore, delAfter
+CYPHER;
+
+        if ($isLastPost) {
+            $queryString = <<<CYPHER
+MATCH (u:User { username: { username }})-[lp:LASTPOST]->(del:Content { uuid: { uuid }})-[np:NEXTPOST]->(nextPost)
+CREATE UNIQUE (u)-[:LASTPOST]->(nextPost)
+DELETE lp, del, np
+CYPHER;
+        }
 
         $query = new Query(
             Neo4jClient::client(),
             $queryString,
             array(
-                'u' => $username,
-                'uuid' => $uuid
+                'username' => $username,
+                'uuid' => $uuid,
+            )
+        );
+    }
+
+    public static function isLastPost($username, $uuid)
+    {
+        $queryString = <<<CYPHER
+MATCH (u:User { username: { username }})-[:LASTPOST]->(c:Content { uuid: { uuid }}) RETURN c
+CYPHER;
+
+        $query = new Query(
+            Neo4jClient::client(),
+            $queryString,
+            array(
+                'username' => $username,
+                'uuid' => $uuid,
             )
         );
 
         $result = $query->getResultSet();
 
-        if (!empty($result)) {
-            //delete
-        }
-    }
-
-    /**
-     * WIP: Edit content
-     *
-     * @param  Content   $content Content to edit
-     * @return Content[]
-     */
-    public static function edit(Content $content)
-    {
-        /*
-			// get a client
-			$client = Neo4jClient::client();
-
-			// if no node set
-			if (!$content->node) {
-	    		$content->node = new Node(Neo4jClient::client());
-	    	}
-
-			//get label
-			$contentLabel = $client->makeLabel('Content');
-
-	        // set properties
-	        $content->node->setProperty('title', $content->title);
-			$content->node->setProperty('url', $content->url);
-
-			// if tags arent empty
-			if ($content->tagstr !== '') {
-				$content->node->setProperty('tagstr', $content->tagstr);
-			}
-
-			// set time
-			$content->timestamp=time();
-			$content->node->setProperty('timestamp', $content->timestamp);
-
-			// set uuid
-			$content->uuid=uniqid();
-			$content->node->setProperty('uuid', $content->uuid);
-
-	        // save the node with the label
-	        $content->node->save()->addLabels(array($contentLabel));
-
-
-	        //set the id on the content object
-	        $content->id = $content->node->getId();
-
-			return $content;
-		 */
-
-        $queryString =  " START p=node({nodeId}) ".
-                        " MATCH p-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u) ".
-                        " RETURN p, u.username  as username ";
-        $query = new Query(Neo4jClient::client(), $queryString, array('nodeId' => $id));
-        $result = $query->getResultSet();
-
-        return self::returnMappedContent($result);
+        return count($result) !== 0;
     }
 
     /**
@@ -151,7 +134,7 @@ class ContentService
         $queryString = <<<CYPHER
 MATCH (usr:User { username: { u }})
 WITH usr
-MATCH (p:Content { contentId: { uuid }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u)
+MATCH (p:Content { uuid: { uuid }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u)
 RETURN p, u.username AS username, u = usr AS owner
 CYPHER;
 
@@ -245,18 +228,24 @@ CYPHER;
      * @param  string  $owner    Content owner
      * @return Content
      */
-    protected static function createFromNode(Node $node, $username = null, $owner = null)
+    protected static function createFromNode(Node $node, $username = null, $owner = false)
     {
+        $uuid = $node->getProperty('uuid');
+
+        if ($uuid === null) {
+            $uuid = $node->getProperty('contentId');
+        }
+
         $content = new Content();
         $content->id = $node->getId();
         $content->title = $node->getProperty('title');
         $content->url = $node->getProperty('url');
         $content->tagstr = $node->getProperty('tagstr');
-        $content->uuid = $node->getProperty('contentId');
+        $content->uuid = $uuid;
         $content->timestamp = gmdate("F j, Y g:i a", $node->getProperty('timestamp'));
         $content->owner = $owner;
         $content->userNameForPost = $username;
-        $content->node = $content;
+        $content->node = $node;
 
         return $content;
     }
