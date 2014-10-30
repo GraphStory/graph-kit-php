@@ -18,5 +18,11 @@ class UserServiceTest extends GraphKitTestCase
         $user->lastname = 'McCarthy';
         $userService = new UserService();
         $userService->save($user);
+
+        $fetchedUser = $userService->getByUsername($user->username);
+        $this->assertEquals($fetchedUser->username, $user->username);
+        $this->assertEquals($fetchedUser->firstname, $user->firstname);
+        $this->assertEquals($fetchedUser->lastname, $user->lastname);
+        $this->assertNotEmpty($fetchedUser->node);
     }
 }
