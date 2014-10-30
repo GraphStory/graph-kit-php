@@ -50,10 +50,33 @@ class UserServiceTest extends GraphKitTestCase
         $this->assertEquals($node->getProperty('username'), $username);
     }
 
-    private function createUser()
+    public function testSearchUserByUsername()
+    {
+        $this->buildRealClient();
+        $this->clearDB();
+        $this->createUser();
+        $user2 = $this->createUser(true);
+        $service = new UserService();
+        $foundUsers = $service->searchByUsername($this->standardUser->username, $this->standardUser->username);
+        $matchedUser = $foundUsers[0];
+        $this->assertEquals($matchedUser->username, $user2->username);
+
+    }
+
+    private function createUser($randomized = false)
     {
         $user = $this->standardUser;
+        if ($randomized){
+            $user = new User();
+            $id = mt_rand(101,200);
+            $user->id = $id;
+            $user->username = $this->standardUser->username . $id;
+            $user->firstname = $this->standardUser->firstname;
+            $user->lastname = $this->standardUser->lastname;
+        }
         $userService = new UserService();
         $userService->save($user);
+
+        return $user;
     }
 }
