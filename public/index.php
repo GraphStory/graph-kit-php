@@ -92,7 +92,9 @@ $app->view->parserOptions = $config['mustache'];
 $app->view->appendData(array('copyrightYear' => date('Y')));
 
 $app->add(new Navigation());
-$app->add(new SessionCookie());
+$app->add(new SessionCookie(
+    array('expires' => '12 hours')
+));
 
 $isLoggedIn = function () use ($app) {
     if (!isset($_SESSION['username']) && empty($_SESSION['username'])) {
