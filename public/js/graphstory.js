@@ -256,7 +256,7 @@ function updateContent(url) {
             $("#contentform")[0].reset();
             $("#contentform").hide();
 
-            alert('Content updated');
+            showAlert('success', 'Content updated');
         },
         error: function(jqXHR, textStatus, errorThrown){
             alert('Content update error: ' + textStatus);
@@ -456,6 +456,16 @@ function loadMoArProducts(){
 function postFeedLoad(){
     // you could do somthing here if necessary after a new page loads via jscroll.
     // I added this because that does happen. you're welcome.
+}
+
+function showAlert(level, message){
+    var block = $('#alert-block');
+    block.addClass('alert-' + level);
+    block.html(message);
+    block.show('slow');
+    setTimeout(function(){
+        block.fadeOut()
+    }, 3000);
 }
 
 function resetForm(form) {
