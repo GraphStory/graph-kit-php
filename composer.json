@@ -41,6 +41,8 @@
         "zendframework/zend-config": "~2.3"
     },
     "require-dev": {
+        "phing/phing": "~2.8",
+        "fabpot/php-cs-fixer": "~0.5",
         "phpunit/phpunit": "~4"
     },
     "autoload": {

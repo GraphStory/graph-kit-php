@@ -340,7 +340,7 @@ $app->put('/posts', function () use ($app) {
     $request = $app->request();
     $contentParams = json_decode($request->getBody());
     $content = ContentService::getContentById(
-        $_SESSION['username'], 
+        $_SESSION['username'],
         $contentParams->contentId
     );
     $content = $content[0];
@@ -379,13 +379,6 @@ $app->get('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
         'postContent' => $content,
     ));
 })->name('social-post');
-
-$app->get('/test', function () use ($app) {
-    $username = 'ajordan';
-    $contentId = '241371997009';
-    ContentService::delete($username, $contentId);
-    var_dump(count(ContentService::getContentById($username, $contentId)));
-});
 
 // Run app
 $app->run();

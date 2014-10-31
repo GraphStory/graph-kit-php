@@ -3,7 +3,6 @@
 namespace GraphStory\GraphKit\Service;
 
 use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Index;
 use GraphStory\GraphKit\Neo4jClient;
 
 class Tag
