@@ -24,6 +24,15 @@ class UserServiceTest extends GraphKitTestCase
         $this->standardUserArray = $user->toArray();
     }
 
+    public function testInstance()
+    {
+        $us = new UserService();
+        $this->assertInstanceOf('GraphStory\GraphKit\Service\UserService', $us);
+    }
+
+    /**
+     * @group integration
+     */
     public function testCreateAndGetUser()
     {
         $this->buildRealClient();
@@ -39,6 +48,9 @@ class UserServiceTest extends GraphKitTestCase
         $this->assertNotEmpty($fetchedUser->node);
     }
 
+    /**
+     * @group integration
+     */
     public function testGetNodeByUsername()
     {
         $this->buildRealClient();
@@ -50,6 +62,9 @@ class UserServiceTest extends GraphKitTestCase
         $this->assertEquals($node->getProperty('username'), $username);
     }
 
+    /**
+     * @group integration
+     */
     public function testSearchUserByUsername()
     {
         $this->buildRealClient();
@@ -63,6 +78,9 @@ class UserServiceTest extends GraphKitTestCase
 
     }
 
+    /**
+     * @group integration
+     */
     public function testSuggestions()
     {
         $this->buildRealClient();
@@ -77,6 +95,9 @@ class UserServiceTest extends GraphKitTestCase
         }
     }
 
+    /**
+     * @group integration
+     */
     public function testFollowUser()
     {
         $this->buildRealClient();
@@ -91,6 +112,9 @@ class UserServiceTest extends GraphKitTestCase
         $this->assertTrue($this->checkUserIsFollowed($toFollow->username, $following));
     }
 
+    /**
+     * @group integration
+     */
     public function testUnfollowUser()
     {
         $this->buildRealClient();
@@ -105,6 +129,9 @@ class UserServiceTest extends GraphKitTestCase
         $this->assertTrue($this->checkUserIsUnfollowed($toUnfollow, $following));
     }
 
+    /**
+     * @group integration
+     */
     public function testGetNodeById()
     {
         $this->buildRealClient();
