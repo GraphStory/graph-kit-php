@@ -9,15 +9,15 @@
 {{# flash.joinSuccess }}
 <div class="alert alert-success alert-dismissible" role="alert">
     <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-    <strong>Welcome to the Graph Kit, {{ usr }}!</strong> Let's get started!
+    <strong>Welcome to the Graph Kit, {{ username }}!</strong> Let's get started!
 </div>
 {{/ flash.joinSuccess }}
 
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-2">
         {{> social-nav }}
     </div>
-    <div class="col-md-9">
+    <div class="col-md-8">
         <h3>Graph Story - Social Feed</h3>
         <p id="contentAddEdit">
             <a href="#" id="addcontent">Add Content</a>
@@ -36,37 +36,63 @@
                 </div>
                 <div class="form-group">
                     <div class="col-sm-offset-2 col-sm-10">
-                        <input type="hidden" class="form-control input-sm" id="contentuuid" name="contentuuid" value="" />
-                        <button type="submit" id="btnSaveContent" class="btn btn-default"> </button>
+                        <input type="hidden" class="form-control input-sm" id="contentId" name="contentId" value="" />
+                        <button type="submit" id="btnSaveContent" class="btn btn-default" data-url="{{ addContentUrl }}"> </button>
                     </div>
                 </div>
             </form> 
         </p>
-        <table class="table table-striped" id="content">
-            {{^ socialContent }}
-            <tr>
-                <td>No content yet!  Trying adding some <a href="/friends">Friends.</a></td>
-            </tr>
-            {{/ socialContent }}
+        <table id="content" class="table table-striped" data-more-content-url="{{ moreContentUrl }}">
+            <tbody>
+                {{^ socialContent }}
+                <tr>
+                    <td>No content yet!  Trying adding some <a href="{{ friendsUrl }}">Friends.</a></td>
+                </tr>
+                {{/ socialContent }}
 
-            {{# socialContent }}
-            <tr>
-                <td>
-                    <a href="{{ url }}" target="_blank">{{ title }}</a> {{# owner }} Edit/Delete {{/ owner }}  <br>
-                    tags: {{ tagstr }} :: Posted by {{ userNameForPost }} at <a href="/viewpost/{{ uuid }}">{{ timestamp }}</a><br>
-                </td>
-            </tr>
-            {{/ socialContent }}
+                {{# socialContent }}
+                    {{> graphs/social/posts-partial }}
+                {{/ socialContent }}
 
-            {{# moreContent }}
-            <tr id="morecontent">
-                <td>
-                    <a href="#" class="next" >Next &gt; &gt; &gt; </a><input type="hidden" id="contentcount" value="3" />
-                </td>
-            </tr>
-            {{/ moreContent }}
+                {{# moreContent }}
+                <tr id="morecontent">
+                    <td colspan="2">
+                        <a href="#" class="next">Next &gt; &gt; &gt; </a><input type="hidden" id="contentcount" value="3" />
+                    </td>
+                </tr>
+                {{/ moreContent }}
+            </tbody>
         </table>
     </div>
+    <div class="col-md-2"></div>
 </div>
+
+{{> graphs/social/delete-modal }}
+
 {{/ content }}
+{{$ javascripts }}
+<script type="text/javascript">
+    var opts = {
+        lines: 13, // The number of lines to draw
+        length: 20, // The length of each line
+        width: 10, // The line thickness
+        radius: 30, // The radius of the inner circle
+        corners: 1, // Corner roundness (0..1)
+        rotate: 0, // The rotation offset
+        direction: 1, // 1: clockwise, -1: counterclockwise
+        color: '#000', // #rgb or #rrggbb or array of colors
+        speed: 1, // Rounds per second
+        trail: 60, // Afterglow percentage
+        shadow: false, // Whether to render a shadow
+        hwaccel: false, // Whether to use hardware acceleration
+        className: 'spinner', // The CSS class to assign to the spinner
+        zIndex: 2e9, // The z-index (defaults to 2000000000)
+        top: 'auto', // Top position relative to parent in px
+        left:'auto' // Left position relative to parent in px
+    };
+
+    var target = document.getElementById('spinner');
+    var spinner = new Spinner(opts).spin(target);
+</script>
+{{/ javascripts }}
 {{/ layout }}

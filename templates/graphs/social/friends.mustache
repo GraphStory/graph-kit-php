@@ -7,23 +7,21 @@
     <div class="col-md-3">
         {{> social-nav.mustache }}
     </div>
-    <div class="col-md-6">
+    <div class="col-md-5">
         <h3>Current Friends</h3>
         <table class="table" id="following">
             {{# following }}
-            <tr>
-                <td>{{ username }}</td>
-                <td><a href="#" id="{{ username }}" class="removefriend">Remove</a></td>
-            </tr>
+                {{> graphs/social/friends-partial }}
             {{/ following }}
         </table>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <h3>Friend Suggestions</h3>
-        <table class="table" id="suggestions">
+        <table id="suggestions" class="table to-follow" data-url="{{ followUrl }}">
             {{# suggestions }}
             <tr>
                 <td>{{ username }}</td>
+                <td>({{ commonFriends }} mutual friends)</td>
                 <td><a href="#" id="{{ username }}" class="addfriend">Add as Friend</a></td>
             </tr>
             {{/ suggestions }}
@@ -31,7 +29,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-3 col-md-offset-9">
+    <div class="col-md-4 col-md-offset-8">
         <h3>Search For Friends</h3>
         <form class="form-horizontal" id="socialfriendsearchform">
             <div class="form-group">
@@ -45,7 +43,7 @@
                 </div>
             </div>
         </form>
-        <table class="table" id="userstoadd">
+        <table id="userstoadd" class="table to-follow" data-url="{{ followUrl }}">
         </table>
     </div>
 </div>

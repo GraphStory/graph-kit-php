@@ -21,3 +21,4 @@ div.productTags { font-size: 14px; padding: 5px 0 10px 0}
 li#feed_load {list-style:  none; list-style-type: none;}
 li.list-group-item.active {background-color: #5cb85c; color: #F5F5F5;}
 li.list-group-item.active a {background-color: #5cb85c; color: #F5F5F5;}
+#alert-block {display:none;}

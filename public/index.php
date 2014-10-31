@@ -11,8 +11,10 @@ require_once APPLICATION_PATH . '/vendor/autoload.php';
 
 use GraphStory\GraphKit\Exception\JsonResponseEncodingException;
 use GraphStory\GraphKit\Neo4jClient;
-use GraphStory\GraphKit\Service\Content;
-use GraphStory\GraphKit\Service\User;
+use GraphStory\GraphKit\Model\Content;
+use GraphStory\GraphKit\Model\User;
+use GraphStory\GraphKit\Service\ContentService;
+use GraphStory\GraphKit\Service\UserService;
 use GraphStory\GraphKit\Slim\JsonResponse;
 use GraphStory\GraphKit\Slim\Middleware\Navigation;
 use Monolog\Handler\StreamHandler;
@@ -43,6 +45,9 @@ $neo4jClient->getTransport()->setAuth(
 if ($config['graphStory']['https']) {
     $neo4jClient->getTransport()->useHttps();
 }
+
+// neo client
+Neo4jClient::setClient($neo4jClient);
 
 $app = new Slim($config['slim']);
 
@@ -82,15 +87,14 @@ $app->error(function (\Exception $e) use ($app) {
     $app->render('errors/500-guest.mustache');
 });
 
-// neo client
-Neo4jClient::setClient($neo4jClient);
-
 $app->view(new Mustache());
 $app->view->parserOptions = $config['mustache'];
 $app->view->appendData(array('copyrightYear' => date('Y')));
 
 $app->add(new Navigation());
-$app->add(new SessionCookie());
+$app->add(new SessionCookie(
+    array('expires' => '12 hours')
+));
 
 $isLoggedIn = function () use ($app) {
     if (!isset($_SESSION['username']) && empty($_SESSION['username'])) {
@@ -102,44 +106,6 @@ $isLoggedIn = function () use ($app) {
 $app->get('/', function () use ($app) {
     $app->render('home/index.mustache');
 })->name('home');
-
-// create new user & redirect
-$app->post('/user/add', function () use ($app) {
-    $username = $app->request->post('username');
-
-    if ($username) {
-        // lower case the username.
-        $username = strtolower(trim($username));
-
-        // see if there's already a User node with this username
-        $checkuser = User::getByUsername($username);
-
-        // No? then save it
-        if (is_null($checkuser)) {
-            // setup the object
-            $user = new User();
-            $user->username = $username;
-            // save it
-            User::save($user);
-
-            // Authenticate user
-            $_SESSION['username'] = $username;
-
-            $app->flash('joinSuccess', true);
-            $app->redirect($app->urlFor('social-graph'));
-        } else {
-            // show the "try again" message.
-            $app->render('home/index.mustache', array(
-                'error' => 'The username "'.$username.'" already exists. Please try again.',
-            ));
-        }
-    } else {
-        // username field was empty
-        $app->render('home/index.mustache', array(
-            'error' => 'Please enter a username.',
-        ));
-    }
-});
 
 $app->get('/login', function () use ($app) {
     $app->redirect($app->urlFor('home'));
@@ -155,7 +121,7 @@ $app->post('/login', function () use ($app) {
     if (!empty($username)) {
         // lower case the username.
         $username = strtolower($username);
-        $checkuser = User::getByUsername($username);
+        $checkuser = UserService::getByUsername($username);
 
         // match
         if (!is_null($checkuser)) {
@@ -180,95 +146,228 @@ $app->get('/logout', function () use ($app) {
     $app->redirect($app->urlFor('home'));
 });
 
-/********************************
-start Social Graph
-********************************/
-
 // social - show user form
 $app->get('/user', $isLoggedIn, function () use ($app) {
-    $user = User::getByUsername($_SESSION['username']);
-    $app->render('graphs/social/user.mustache', array('user' => $user));
+    $user = UserService::getByUsername($_SESSION['username']);
+    $app->render('graphs/social/user.mustache', array(
+        'user' => $user,
+        'userEditUrl' => $app->urlFor('user-edit'),
+    ));
+})->name('user-profile');
+
+// create new user & redirect
+$app->post('/user/add', function () use ($app) {
+    $username = $app->request->post('username');
+
+    if ($username) {
+        // lower case the username.
+        $username = strtolower(trim($username));
+
+        // see if there's already a User node with this username
+        $checkuser = UserService::getByUsername($username);
+
+        // No? then save it
+        if (is_null($checkuser)) {
+            // setup the object
+            $user = new User();
+            $user->username = $username;
+            // save it
+            UserService::save($user);
+
+            // Authenticate user
+            $_SESSION['username'] = $username;
+
+            $app->flash('joinSuccess', true);
+            $app->redirect($app->urlFor('social-graph'));
+        } else {
+            // show the "try again" message.
+            $app->render('home/index.mustache', array(
+                'error' => 'The username "'.$username.'" already exists. Please try again.',
+            ));
+        }
+    } else {
+        // username field was empty
+        $app->render('home/index.mustache', array(
+            'error' => 'Please enter a username.',
+        ));
+    }
 });
 
 // social - edit a user
 $app->put('/user/edit', function () use ($app) {
-    $request = $app->request();
-    $usrparams = json_decode($request->getBody());
+    $params = json_decode($app->request->getBody());
 
-    $user = User::getByUsername($_SESSION['username']);
-    $user->firstname = $usrparams->firstname;
-    $user->lastname = $usrparams->lastname;
-    User::save($user);
+    $user = UserService::getByUsername($_SESSION['username']);
+    $user->firstname = $params->firstname;
+    $user->lastname = $params->lastname;
+
+    UserService::save($user);
 
     $app->jsonResponse->build($user);
-});
+})->name('user-edit');
+
+/********************************
+ * Start Social Graph
+ *******************************/
 
 // social - friends - get list of friends and search for new ones
 $app->get('/friends', $isLoggedIn, function () use ($app) {
-    $user = User::getByUsername($_SESSION['username']);
-    $following = User::following($_SESSION['username']);
-    $suggestions = User::friendSuggestions($_SESSION['username']);
+    $user = UserService::getByUsername($_SESSION['username']);
+    $following = UserService::following($_SESSION['username']);
+    $suggestions = UserService::friendSuggestions($_SESSION['username']);
 
     $app->render('graphs/social/friends.mustache', array(
         'user' => $user,
         'following' => $following,
         'suggestions' => $suggestions,
+        'unfollowUrl' => $app->urlFor('social-unfollow', array('userToUnfollow' => null)),
+        'followUrl' => $app->urlFor('social-follow', array('userToFollow' => null)),
     ));
-});
+})->name('social-friends');
 
 // takes current user session and will follow :username, e.g. one way follow
-$app->get('/follow/:username', function ($username) use ($app) {
-    $rel = User::followUser($_SESSION['username'], $username);
-    $following =  User::following($_SESSION['username']);
+$app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
+    UserService::followUser($_SESSION['username'], $userToFollow);
+
+    $following = UserService::following($_SESSION['username']);
+    $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
+    $return = array();
+
+    foreach ($following as $friend) {
+        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+
+        $return[] = $app->view
+            ->getInstance()
+            ->render('graphs/social/friends-partial', $content);
+    }
 
     $app->jsonResponse->build(
-        array('following' => $following)
+        array('following' => $return)
     );
-});
+})->name('social-follow');
 
-// takes current user session and will follow :username, e.g. one way follow
-$app->get('/unfollow/:username', function ($username) use ($app) {
-    $rel = User::unfollowUser($_SESSION['username'], $username, $app);
-    $following =  User::following($_SESSION['username']);
+// takes current user session and will unfollow :username
+$app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) {
+    UserService::unfollowUser($_SESSION['username'], $userToUnfollow);
+
+    $following = UserService::following($_SESSION['username']);
+    $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
+    $return = array();
+
+    foreach ($following as $friend) {
+        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+
+        $return[] = $app->view
+            ->getInstance()
+            ->render('graphs/social/friends-partial', $content);
+    }
 
     $app->jsonResponse->build(
-        array('following' => $following)
+        array('following' => $return)
     );
-});
+})->name('social-unfollow');
 
 //search users by name
-$app->get('/searchbyusername/:u', function ($u) use ($app) {
-    $users = User::searchByUsername($u, $_SESSION['username']);
+$app->get('/searchbyusername/:search', function ($search) use ($app) {
+    $users = UserService::searchByUsername($search, $_SESSION['username']);
 
     $app->jsonResponse->build(
         array('users' => $users)
     );
-});
+})->name('user-search');
 
 // social - show posts
 $app->get('/posts', $isLoggedIn, function () use ($app) {
-    $content = Content::getContent($_SESSION['username'], 0);
+    $content = ContentService::getContent($_SESSION['username'], 0);
     $socialContent = array_slice($content, 0, 3);
     $moreContent = (count($content) >= 4);
 
     $app->render('graphs/social/posts.mustache', array(
-        'usr' => $_SESSION['username'],
+        'username' => $_SESSION['username'],
         'socialContent' => $socialContent,
         'moreContent' => $moreContent,
+        'moreContentUrl' => $app->urlFor('social-feed', array('skip' => null)),
+        'addContentUrl' => $app->urlFor('social-post-add'),
+        'friendsUrl' => $app->urlFor('social-friends'),
+        'postUrl' => $app->urlFor('social-post', array('postId' => null)),
     ));
 })->name('social-graph');
 
-// social - return posts via JSON
-$app->get('/postsfeed/:s', $isLoggedIn, function ($s) use ($app) {
-    $content =  Content::getContent($_SESSION['username'], (int) $s);
+// social - return posts as JSON
+$app->get('/feed/:skip', $isLoggedIn, function ($skip) use ($app) {
+    $result = ContentService::getContent($_SESSION['username'], (int) $skip);
+
+    $postUrl = $app->urlFor('social-post', array('postId' => null));
+    $return = array();
+
+    foreach ($result as $content) {
+        $content = array_merge(array('postUrl' => $postUrl), $content->toArray());
+
+        $return[] = $app->view
+            ->getInstance()
+            ->render('graphs/social/posts-partial', $content);
+    }
+
     $app->jsonResponse->build(
-        array('content' => $content)
+        array('content' => $return)
     );
-});
+})->name('social-feed');
+
+// social - add a post
+$app->post('/posts', function () use ($app) {
+    $request = $app->request();
+    $contentParams = json_decode($request->getBody());
+
+    $content = new Content();
+    $content->title = $contentParams->title;
+    $content->url = $contentParams->url;
+
+    // are tags set?
+    if (isset($contentParams->tagstr)) {
+        $content->tagstr = $contentParams->tagstr;
+    }
+
+    $result = ContentService::add($_SESSION['username'], $content);
+    $content = $result[0];
+    $postUrl = $app->urlFor('social-post', array('postId' => null));
+    $content = array_merge(array('postUrl' => $postUrl), $content->toArray());
+
+    $app->render('graphs/social/posts-partial', $content);
+})->name('social-post-add');
+
+// social - edit a post
+$app->put('/posts', function () use ($app) {
+    $request = $app->request();
+    $contentParams = json_decode($request->getBody());
+    $content = ContentService::getContentById(
+        $_SESSION['username'], 
+        $contentParams->contentId
+    );
+    $content = $content[0];
+
+    $content->title = $contentParams->title;
+    $content->url = $contentParams->url;
+
+    // are tags set?
+    if (isset($contentParams->tagstr)) {
+        $content->tagstr = $contentParams->tagstr;
+    }
+
+    $result = ContentService::edit($content);
+    $postUrl = $app->urlFor('social-post', array('postId' => null));
+    $content = array_merge(array('postUrl' => $postUrl), $content->toArray());
+
+    $app->render('graphs/social/posts-partial', $content);
+})->name('social-post-edit');
+
+// social - remove a post
+$app->delete('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
+    ContentService::delete($_SESSION['username'], $postId);
+})->name('social-post-delete');
 
 // social - show post
-$app->get('/viewpost/:postId', $isLoggedIn, function ($postId) use ($app) {
-    $post =  Content::getContentItemByUUID($_SESSION['username'], $postId);
+$app->get('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
+    $post = ContentService::getContentById($_SESSION['username'], $postId);
     $content = new Content();
 
     if (!empty($post)) {
@@ -279,113 +378,13 @@ $app->get('/viewpost/:postId', $isLoggedIn, function ($postId) use ($app) {
         'usr' => $_SESSION['username'],
         'postContent' => $content,
     ));
-});
+})->name('social-post');
 
-// social - add a post
-$app->post('/posts/add', function () use ($app) {
-    $request = $app->request();
-    $body = $request->getBody();
-    $contentParams = json_decode($request->getBody());
-    $content = new Content();
-    $content->title = $contentParams->title;
-    $content->url = $contentParams->url;
-    // are tags set?
-    if (isset($contentParams->tagstr)) {
-        $content->tagstr = $contentParams->tagstr;
-    }
-
-    $post = Content::add($_SESSION['username'], $content);
-
-    $app->jsonResponse->build($post[0]);
-});
-
-// social - edit a post
-$app->post('/posts/edit', function () use ($app) {
-    // Not implemented
-});
-
-// social - remove a post
-$app->get('/posts/remove/:postId', function ($postId) use ($app) {
-
-});
-
-/********************************
-start Interest Graph
-********************************/
-// add tags to owned post
-$app->post('/posts/addwithtags', function () use ($app) {
-    // Not implemented
-});
-
-//filter based on my owned posts and specific tag
-
-// add current user tags to non-owned post
-$app->get('/mytags/add/:tags', function ($tags) use ($app) {
-    $app->render('graphs/social/posts.mustache');
-});
-
-//filter based on my non-owned posts and specific tag
-
-
-/********************************
-start Consumption Graph
-********************************/
-// add new product or content with tag
-
-// TODO function to add consumption
-
-// show content trail (last 3)
-
-// filter users who used the same tag as a specific product has used
-
-$app->get('/posts/:postId', function ($postId) use ($app) {
-    $app->render('graphs/social/posts.mustache');
-});
-
-/********************************
-start Location Graph
-********************************/
-
-// add stores with lat/long
-$app->get('/social', function () use ($app) {
-    $app->render('graphs/social/posts.mustache');
-});
-
-// add products to stores
-
-// search for stores nearby
-
-// search for products nearby
-
-// filter for users who have searched for products and have same tags as products
-
-// suggest user to store
-
-/********************************
-start Intent Graph
-********************************/
-// social - show posts
-$app->get('/social', function () use ($app) {
-    $app->render('graphs/social/posts.mustache');
-});
-
-$app->get('/user/:id', function ($id) use ($app) {
-    $user = User::getByNodeId($id);
-    $body = 'sup world';
-    $app->render('index.mustache', array(
-        'title' => $user->name,
-        'body' => $body
-    ));
-    /*
-    foreach ($user as $obj) {
-        echo $$obj->name;
-    }
-     */
-    // social is user following user
-    // interest is tags
-    // consumption is content or products viewed
-    // location is location
-    // intent variables are (1) frequency of tags (2) product rating (3) content rating (4) location frequency and (5) intersection of tags to consumption items
+$app->get('/test', function () use ($app) {
+    $username = 'ajordan';
+    $contentId = '241371997009';
+    ContentService::delete($username, $contentId);
+    var_dump(count(ContentService::getContentById($username, $contentId)));
 });
 
 // Run app
