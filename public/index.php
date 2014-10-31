@@ -97,14 +97,18 @@ $app->add(new SessionCookie(
 ));
 
 $isLoggedIn = function () use ($app) {
-    if (!isset($_SESSION['username']) && empty($_SESSION['username'])) {
+    if (empty($_SESSION['username'])) {
         $app->redirect($app->urlFor('home'));
     }
 };
 
 // home
 $app->get('/', function () use ($app) {
-    $app->render('home/index.mustache');
+    $isAuthenticated = (empty($_SESSION['username'])) ? false : true;
+
+    $app->render('home/index.mustache', array(
+        'isAuthenticated' => $isAuthenticated,
+    ));
 })->name('home');
 
 $app->get('/login', function () use ($app) {

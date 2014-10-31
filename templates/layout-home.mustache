@@ -17,8 +17,8 @@
         <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
         <![endif]-->
         <style type="text/css" media="screen">
-            body { padding-top: 50px;  padding-bottom: 20px; } 
-            .jumbotron { padding-top: 60px; padding-bottom: 20px; } 
+            body { padding-top: 50px;  padding-bottom: 20px; }
+            .jumbotron { padding-top: 60px; padding-bottom: 20px; }
             .jumbotron img { padding-bottom: 30px; }
             .navbar-inverse { background-color: #000; padding: 0 0 0 0; }
             .pad { padding-left: 0px; }
@@ -34,33 +34,48 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="/"></a>
+                    <a class="navbar-brand" href="/">Graph Kit for PHP</a>
                 </div>
                 <div class="navbar-collapse collapse">
+                    {{# isAuthenticated }}
+                    <ul class="nav navbar-nav">
+                        {{# navigation }}
+                        <li class="{{ class }}">
+                            <a href="{{ href }}">{{ caption }}</a>
+                        </li>
+                        {{/ navigation }}
+                    </ul>
+                    {{/ isAuthenticated }}
+
+                    {{^ isAuthenticated }}
                     <form class="navbar-form navbar-right" action="/login" role="form" method="post">
                         <div class="form-group">
                             <input type="text" placeholder="Username" name="username" class="form-control">
                         </div>
-                        <button type="submit" class="btn btn-success">Sign in</button>  &nbsp; 
+                        <button type="submit" class="btn btn-success">Sign in</button>  &nbsp;
                     </form>
+                    {{/ isAuthenticated }}
                 </div><!--/.navbar-collapse -->
             </div>
-        </div>      
+        </div>
 
         <div class="jumbotron">
             <div class="container">
                 <a href="/"><img src="/img/graphstory-practical-neo4j.png" class="img-responsive" /></a>
                 <p class="pad">The leading graph-as-a-service provider</p>
                 {{# error }}
-                <p class="error">{{ error }}</p>	
+                <p class="error">{{ error }}</p>
                 {{/ error }}
+
+                {{^ isAuthenticated }}
                 <form class="form-inline" role="form" action="/user/add" id="createaccountform" method="post">
                     <div class="form-group {{# error }}has-error{{/ error }}">
                         <label class="sr-only" for="username">Username</label>
                         <input type="text" class="form-control" id="username" placeholder="Username" name="username">
                     </div>
-                    <button type="submit" class="btn btn-success">Create Account</button>  &nbsp; 
+                    <button type="submit" class="btn btn-success">Create Account</button>  &nbsp;
                 </form>
+                {{/ isAuthenticated }}
             </div>
         </div>
 
