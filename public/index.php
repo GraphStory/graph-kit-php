@@ -380,12 +380,5 @@ $app->get('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
     ));
 })->name('social-post');
 
-$app->get('/test', function () use ($app) {
-    $username = 'ajordan';
-    $contentId = '241371997009';
-    ContentService::delete($username, $contentId);
-    var_dump(count(ContentService::getContentById($username, $contentId)));
-});
-
 // Run app
 $app->run();
