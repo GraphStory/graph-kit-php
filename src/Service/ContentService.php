@@ -23,7 +23,7 @@ class ContentService
 MATCH (user { username: {u}})
 OPTIONAL MATCH (user)-[r:LASTPOST]->(lastpost)
 DELETE r
-CREATE (user)-[:LASTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, uuid:{uuid} })
+CREATE (user)-[:LASTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
 WITH p, collect(lastpost) as lastposts
 FOREACH (x IN lastposts | CREATE p-[:NEXTPOST]->x)
 RETURN p, {u} as username, true as owner
@@ -38,7 +38,7 @@ CYPHER;
                 'url' => $content->url,
                 'tagstr' => $content->tagstr,
                 'timestamp' => time(),
-                'uuid' => uniqid()
+                'contentId' => uniqid()
             )
         );
         $result = $query->getResultSet();
@@ -69,43 +69,35 @@ CYPHER;
     }
 
     /**
-     * Delete content
+     * Delete content and create relationships between remaining content as appropriate
      *
-     * @param string $username Username of content owner
-     * @param string $uuid Content id
+     * @param string $username  Username of content owner
+     * @param string $contentId Content id
      */
-    public static function delete($username, $uuid)
+    public static function delete($username, $contentId)
     {
-        $isLastPost = self::isLastPost($username, $uuid);
+        $queryString = self::getDeleteQueryString($username, $contentId);
 
-        $queryString = <<<CYPHER
-MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(before),(before)-[delBefore]->(del:Content { uuid: { uuid }})-[delAfter]->(after)
-CREATE UNIQUE (before)-[:NEXTPOST]->(after)
-DELETE del, delBefore, delAfter
-CYPHER;
-
-        if ($isLastPost) {
-            $queryString = <<<CYPHER
-MATCH (u:User { username: { username }})-[lp:LASTPOST]->(del:Content { uuid: { uuid }})-[np:NEXTPOST]->(nextPost)
-CREATE UNIQUE (u)-[:LASTPOST]->(nextPost)
-DELETE lp, del, np
-CYPHER;
-        }
-
-        $query = new Query(
-            Neo4jClient::client(),
-            $queryString,
-            array(
-                'username' => $username,
-                'uuid' => $uuid,
-            )
+        $params = array(
+            'username' => $username,
+            'contentId' => $contentId,
         );
+
+        $query = new Query(Neo4jClient::client(), $queryString, $params);
+        $query->getResultSet();
     }
 
-    public static function isLastPost($username, $uuid)
+    /**
+     * Returns true if Content is the most recent, or last, Content item
+     *
+     * @param  string  $username  Username of content owner
+     * @param  string  $contentId Content id
+     * @return boolean True if Content is most recent, false otherwise
+     */
+    public static function isLastPost($username, $contentId)
     {
         $queryString = <<<CYPHER
-MATCH (u:User { username: { username }})-[:LASTPOST]->(c:Content { uuid: { uuid }}) RETURN c
+MATCH (u:User { username: { username }})-[:LASTPOST]->(c:Content { contentId: { contentId }}) RETURN c
 CYPHER;
 
         $query = new Query(
@@ -113,7 +105,7 @@ CYPHER;
             $queryString,
             array(
                 'username' => $username,
-                'uuid' => $uuid,
+                'contentId' => $contentId,
             )
         );
 
@@ -123,18 +115,80 @@ CYPHER;
     }
 
     /**
-     * Gets content by UUID
+     * Returns true if Content is the final, and oldest, Content item in the list
      *
-     * @param  string    $username Username
-     * @param  string    $uuid     Content UUID
+     * @param  string  $username  Username of content owner
+     * @param  string  $contentId Content id
+     * @return boolean True if Content is last, false otherwise
+     */
+    public static function isLeafPost($username, $contentId)
+    {
+        $queryString = <<<CYPHER
+MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(c:Content { contentId: { contentId }})
+WHERE NOT (c)-[:NEXTPOST]->()
+RETURN c
+CYPHER;
+
+        $query = new Query(
+            Neo4jClient::client(),
+            $queryString,
+            array(
+                'username' => $username,
+                'contentId' => $contentId,
+            )
+        );
+
+        $result = $query->getResultSet();
+
+        return count($result) !== 0;
+    }
+
+    /**
+     * Gets the appropriate DELETE query based on where in the list the Content appears
+     *
+     * @param  string $username  Username of content owner
+     * @param  string $contentId Content id
+     * @return string Cypher query to delete Content
+     */
+    protected static function getDeleteQueryString($username, $contentId)
+    {
+        if (self::isLeafPost($username, $contentId)) {
+            return <<<CYPHER
+MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(c:Content { contentId: { contentId }})
+WITH c
+MATCH (c)-[r]-()
+DELETE c, r
+CYPHER;
+        }
+
+        if (self::isLastPost($username, $contentId)) {
+            return <<<CYPHER
+MATCH (u:User { username: { username }})-[lp:LASTPOST]->(del:Content { contentId: { contentId }})-[np:NEXTPOST]->(nextPost)
+CREATE UNIQUE (u)-[:LASTPOST]->(nextPost)
+DELETE lp, del, np
+CYPHER;
+        }
+
+        return <<<CYPHER
+MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(before),(before)-[delBefore]->(del:Content { contentId: { contentId }})-[delAfter]->(after)
+CREATE UNIQUE (before)-[:NEXTPOST]->(after)
+DELETE del, delBefore, delAfter
+CYPHER;
+    }
+
+    /**
+     * Gets content by contentId
+     *
+     * @param  string    $username  Username
+     * @param  string    $contentId Content id
      * @return Content[]
      */
-    public static function getContentItemByUUID($username, $uuid)
+    public static function getContentById($username, $contentId)
     {
         $queryString = <<<CYPHER
 MATCH (usr:User { username: { u }})
 WITH usr
-MATCH (p:Content { uuid: { uuid }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u)
+MATCH (p:Content { contentId: { contentId }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u)
 RETURN p, u.username AS username, u = usr AS owner
 CYPHER;
 
@@ -143,7 +197,7 @@ CYPHER;
             $queryString,
             array(
                 'u' => $username,
-                'uuid' => $uuid,
+                'contentId' => $contentId,
             )
         );
 
@@ -230,22 +284,16 @@ CYPHER;
      */
     protected static function createFromNode(Node $node, $username = null, $owner = false)
     {
-        $uuid = $node->getProperty('uuid');
-
-        if ($uuid === null) {
-            $uuid = $node->getProperty('contentId');
-        }
-
         $content = new Content();
-        $content->id = $node->getId();
+        $content->node = $node;
+        $content->nodeId = $node->getId();
+        $content->contentId = $node->getProperty('contentId');
         $content->title = $node->getProperty('title');
         $content->url = $node->getProperty('url');
         $content->tagstr = $node->getProperty('tagstr');
-        $content->uuid = $uuid;
         $content->timestamp = gmdate("F j, Y g:i a", $node->getProperty('timestamp'));
         $content->owner = $owner;
         $content->userNameForPost = $username;
-        $content->node = $node;
 
         return $content;
     }

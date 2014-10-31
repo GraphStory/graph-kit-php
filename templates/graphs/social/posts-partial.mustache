@@ -1,12 +1,12 @@
-<tr id="tr_{{ uuid }}">
+<tr id="tr_{{ contentId }}">
     <td>
-        <a href="{{ url }}" id="url_{{ uuid }}" target="_blank">{{ title }}</a><br>
-        tags: {{ tagstr }} :: Posted by {{ userNameForPost }} at <a href="{{ postUrl }}{{ uuid }}">{{ timestamp }}</a>
+        <a href="{{ url }}" id="url_{{ contentId }}" target="_blank">{{ title }}</a><br>
+        tags: {{ tagstr }} :: Posted by {{ userNameForPost }} at <a href="{{ postUrl }}{{ contentId }}">{{ timestamp }}</a>
     </td>
     <td>
         {{# owner }}
-            <button type="button" class="editcontent btn btn-primary btn-xs" id="edit_{{ uuid }}">Edit</button>&nbsp;
-            <button type="button" class="deletecontent btn btn-danger btn-xs" id="delete_{{ uuid }}">Delete</button>
+            <button type="button" class="editcontent btn btn-primary btn-xs" id="edit_{{ contentId }}">Edit</button>&nbsp;
+            <button type="button" class="deletecontent btn btn-danger btn-xs" id="delete_{{ contentId }}">Delete</button>
         {{/ owner }}<br>
     </td>
 </tr>

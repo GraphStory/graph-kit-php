@@ -41,7 +41,7 @@ $('#following').on('click', 'a.removefriend', function() {
 $('#morecontent').on('click', 'a.next', function() {
     getcontent(
         $("table#content").data("moreContentUrl"),
-        parseInt($("#contentcount").val()) + 1
+        parseInt($("#contentcount").val())
     );
     return false;
 });
@@ -62,8 +62,8 @@ $('#contentAddEdit').on('click', 'a#addcontent', function() {
 });
 
 $('#btnSaveContent').click(function() {
-    var uuid = $('#contentuuid').val();
-    if (!uuid){
+    var id = $('#contentId').val();
+    if (!id){
         addContent($(this).data('url'));
     } else {
         updateContent($(this).data('url'));
@@ -72,7 +72,7 @@ $('#btnSaveContent').click(function() {
     return false;
 });
 
-$('button.deletecontent').on('click', function() {
+$('#content tbody').on('click', '.deletecontent', function() {
     var id = $(this).attr('id');
     id = id.replace("delete_","");
 
@@ -91,7 +91,7 @@ $('button.deletecontent').on('click', function() {
     return false;
 });
 
-$('button.editcontent').on('click', function() {
+$('#content tbody').on('click', '.editcontent', function() {
     var id = $(this).attr('id');
     id = id.replace("edit_","");
 
@@ -107,7 +107,7 @@ $('button.editcontent').on('click', function() {
         $("#contentform").show();
         $("#addcontent").text("Cancel");
 
-        $("#contentuuid").val(id);
+        $("#contentId").val(id);
         $("#title").val($("#url_" + id).text());
         $("#url").val($("#url_" + id).attr('href'));
 
@@ -235,7 +235,7 @@ function addContent(url) {
 }
 
 function updateContent(url) {
-    var uuid = $("#contentuuid").val();
+    var id = $("#contentId").val();
     var json = ConvertFormToJSON($("#contentform"));
     json = JSON.stringify(json);
 
@@ -246,7 +246,7 @@ function updateContent(url) {
         dataType: 'html',
         data: contentformToJSON(),
         success: function(html, textStatus, jqXHR){
-            $("#tr_" + uuid).replaceWith(html);
+            $("#tr_" + id).replaceWith(html);
 
             $("#addcontent").text('Add Content');
 
@@ -338,9 +338,9 @@ function userformToJSON() {
 function contentformToJSON() {
 
     if($("#tagstr").length == 0) {
-        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "uuid": $('#contentuuid').val() });
+        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "contentId": $('#contentId').val() });
     }else{
-        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "tagstr": $('#tagstr').val(), "uuid": $('#contentuuid').val() });
+        return JSON.stringify({"title": $('#title').val(), "url": $('#url').val(), "tagstr": $('#tagstr').val(), "contentId": $('#contentId').val() });
     }
 }
 

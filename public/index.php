@@ -339,7 +339,10 @@ $app->post('/posts', function () use ($app) {
 $app->put('/posts', function () use ($app) {
     $request = $app->request();
     $contentParams = json_decode($request->getBody());
-    $content = ContentService::getContentItemByUUID($_SESSION['username'], $contentParams->uuid);
+    $content = ContentService::getContentById(
+        $_SESSION['username'], 
+        $contentParams->contentId
+    );
     $content = $content[0];
 
     $content->title = $contentParams->title;
@@ -364,7 +367,7 @@ $app->delete('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
 
 // social - show post
 $app->get('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
-    $post = ContentService::getContentItemByUUID($_SESSION['username'], $postId);
+    $post = ContentService::getContentById($_SESSION['username'], $postId);
     $content = new Content();
 
     if (!empty($post)) {
@@ -376,6 +379,13 @@ $app->get('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
         'postContent' => $content,
     ));
 })->name('social-post');
+
+$app->get('/test', function () use ($app) {
+    $username = 'ajordan';
+    $contentId = '241371997009';
+    ContentService::delete($username, $contentId);
+    var_dump(count(ContentService::getContentById($username, $contentId)));
+});
 
 // Run app
 $app->run();
