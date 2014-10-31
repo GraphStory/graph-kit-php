@@ -1,6 +1,6 @@
 <?php
 
-namespace GraphStory\Tests\Mock;
+namespace GraphStory\tests\Mock;
 
 use \Everyman\Neo4j\Client;
 

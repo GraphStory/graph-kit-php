@@ -1,6 +1,6 @@
 <?php
 
-namespace GraphStory\Tests\Unit;
+namespace GraphStory\tests\Unit;
 
 use \GraphStory\GraphKit\Neo4jClient;
 use \GraphStory\Tests\Mock\Neo4jClientMock;
@@ -20,6 +20,7 @@ class Neo4jClientTest extends \PHPUnit_Framework_TestCase
     {
         if (!$this->mockClient) {
             $this->mockClient = new Neo4jClientMock();
+
             return $this->mockClient;
         }
     }
