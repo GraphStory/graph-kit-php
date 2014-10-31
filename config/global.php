@@ -16,7 +16,7 @@ return array(
     'logging' => array(
         'logFile' => APPLICATION_PATH . '/logs/app.log',
     ),
-    // This is a template for the Graph Story connection info you should add 
+    // This is a template for the Graph Story connection info you should add
     // to /config/secret.php
     'graphStory' => array(
         'restUsername' => null,

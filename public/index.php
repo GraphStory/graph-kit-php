@@ -340,7 +340,7 @@ $app->put('/posts', function () use ($app) {
     $request = $app->request();
     $contentParams = json_decode($request->getBody());
     $content = ContentService::getContentById(
-        $_SESSION['username'], 
+        $_SESSION['username'],
         $contentParams->contentId
     );
     $content = $content[0];
