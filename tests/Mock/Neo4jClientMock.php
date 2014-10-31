@@ -1,8 +1,8 @@
 <?php
 
-namespace GraphStory\Tests\Mock;
+namespace GraphStory\GraphKit\Test\Mock;
 
-use \Everyman\Neo4j\Client;
+use Everyman\Neo4j\Client;
 
 class Neo4jClientMock extends Client
 {

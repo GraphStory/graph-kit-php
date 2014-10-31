@@ -52,7 +52,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "GraphStory\\Tests\\": "tests/"
+            "GraphStory\\GraphKit\\Test\\": "tests/"
         }
     }
 }
