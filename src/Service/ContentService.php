@@ -72,7 +72,7 @@ CYPHER;
      * Delete content
      *
      * @param string $username Username of content owner
-     * @param string $uuid Content id
+     * @param string $uuid     Content id
      */
     public static function delete($username, $uuid)
     {
