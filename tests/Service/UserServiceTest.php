@@ -68,6 +68,77 @@ class UserServiceTest extends GraphKitTestCase
         $this->buildRealClient();
         $this->clearDB();
         $this->loadGraph();
+        $username = 'bernhard.isidro';
+        $service = new UserService();
+        $suggestions = $service->friendSuggestions($username);
+        foreach ($suggestions as $user) {
+            $this->assertTrue($user->username !== $username);
+            $this->assertTrue(is_int($user->commonFriends));
+        }
+    }
+
+    public function testFollowUser()
+    {
+        $this->buildRealClient();
+        $this->clearDB();
+        $this->loadGraph();
+        $username = 'bernhard.isidro';
+        $service = new UserService();
+        $suggestions = $service->friendSuggestions($username);
+        $toFollow = $suggestions[0];
+        $service->followUser($username, $toFollow->username);
+        $following = $service->following($username);
+        $this->assertTrue($this->checkUserIsFollowed($toFollow->username, $following));
+    }
+
+    public function testUnfollowUser()
+    {
+        $this->buildRealClient();
+        $this->clearDB();
+        $this->loadGraph();
+        $username = 'bernhard.isidro';
+        $service = new UserService();
+        $following = $service->following($username);
+        $toUnfollow = $following[0]->username;
+        $service->unfollowUser($username, $toUnfollow);
+        $following = $service->following($username);
+        $this->assertTrue($this->checkUserIsUnfollowed($toUnfollow, $following));
+    }
+
+    public function testGetNodeById()
+    {
+        $this->buildRealClient();
+        $this->clearDB();
+        $this->loadGraph();
+        $username = 'bernhard.isidro';
+        $service = new UserService();
+        $user = $service->getByUsername($username);
+        $id = $user->node->getId();
+        $userById = $service->getByNodeId($id);
+        $this->assertEquals($userById, $user);
+
+    }
+
+    private function checkUserIsFollowed($user, array $userMap)
+    {
+        foreach ($userMap as $following){
+            if ($following->username == $user) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function checkUserIsUnfollowed($user, array $userMap)
+    {
+        foreach ($userMap as $following){
+            if ($following->username == $user) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function createUser($randomized = false)
