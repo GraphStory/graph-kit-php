@@ -1,6 +1,6 @@
 <?php
 
-namespace GraphStory\GraphKit\Tests;
+namespace GraphStory\GraphKit\Test;
 
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Cypher\Query;

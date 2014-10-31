@@ -1,8 +1,8 @@
 <?php
 
-namespace GraphStory\GraphKit\Tests\Service;
+namespace GraphStory\GraphKit\Test\Service;
 
-use GraphStory\GraphKit\Tests\GraphKitTestCase;
+use GraphStory\GraphKit\Test\GraphKitTestCase;
 use GraphStory\GraphKit\Model\User,
     GraphStory\GraphKit\Service\UserService;
 
