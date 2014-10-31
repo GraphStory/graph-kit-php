@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Graph Story's Graph Kit for PHP" default="build">
+
+    <property file="build.properties" />
+
+    <fileset id="php-files" dir="${project.basedir}/src">
+        <include name="**/*.php" />
+    </fileset>
+
+    <target name="clean" description="Clean build path">
+        <delete dir="${project.basedir}/build" />
+        <mkdir dir="${project.basedir}/build" />
+        <mkdir dir="${project.basedir}/build/coverage" />
+        <mkdir dir="${project.basedir}/build/logs" />
+    </target>
+
+    <target name="phplint" description="Running php lint check">
+        <phplint haltonfailure="true">
+            <fileset refid="php-files" />
+            <fileset dir="${project.basedir}/public">
+                <include name="index.php" />
+            </fileset>
+        </phplint>
+    </target>
+
+    <target name="phpunit" description="Running unit tests">
+        <exec
+            passthru="${passthru}"
+            dir="${project.basedir}"
+            command="phpunit"
+            />
+    </target>
+
+    <target name="php-cs-fixer" description="Fix CS violations">
+        <exec
+            passthru="${passthru}"
+            dir="${project.basedir}"
+            command="php-cs-fixer fix --verbose" />
+    </target>
+
+    <target name="phpcpd" description="Copy/Paste detection">
+        <phpcpd>
+            <fileset refid="php-files" />
+            <formatter
+                type="pmd"
+                outfile="${project.basedir}/build/logs/pmd-cpd.xml" />
+        </phpcpd>
+    </target>
+
+    <target name="phploc" description="Generate phploc.csv">
+        <phploc reportType="csv" reportName="phploc" reportDirectory="${project.basedir}/build/logs">
+            <fileset refid="php-files" />
+        </phploc>
+    </target>
+
+    <target name="phpmd" description="Mess detection">
+        <exec
+            passthru="${passthru}"
+            dir="${project.basedir}/src"
+            command="phpmd ${project.basedir}/src xml cleancode,codesize,controversial,design,naming,unusedcode
+            --suffixes .php
+            --reportfile ${project.basedir}/build/logs/pmd.xml" />
+    </target>
+
+    <target name="build" description="Build app">
+        <phingCall target="clean" />
+        <phingCall target="php-cs-fixer" />
+        <phingCall target="phplint" />
+        <phingCall target="phpunit" />
+        <phingCall target="phpcpd" />
+        <phingCall target="phpmd" />
+        <phingCall target="phploc" />
+    </target>
+</project>
