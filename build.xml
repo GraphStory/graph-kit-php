@@ -15,7 +15,7 @@
         <mkdir dir="${project.basedir}/build/logs" />
     </target>
 
-    <target name="phplint" description="Running php lint check">
+    <target name="phplint" description="Running PHP lint check">
         <phplint haltonfailure="true">
             <fileset refid="php-files" />
             <fileset dir="${project.basedir}/public">
@@ -28,7 +28,7 @@
         <exec
             passthru="${passthru}"
             dir="${project.basedir}"
-            command="phpunit"
+            command="./vendor/bin/phpunit"
             />
     </target>
 
@@ -36,31 +36,7 @@
         <exec
             passthru="${passthru}"
             dir="${project.basedir}"
-            command="php-cs-fixer fix --verbose" />
-    </target>
-
-    <target name="phpcpd" description="Copy/Paste detection">
-        <phpcpd>
-            <fileset refid="php-files" />
-            <formatter
-                type="pmd"
-                outfile="${project.basedir}/build/logs/pmd-cpd.xml" />
-        </phpcpd>
-    </target>
-
-    <target name="phploc" description="Generate phploc.csv">
-        <phploc reportType="csv" reportName="phploc" reportDirectory="${project.basedir}/build/logs">
-            <fileset refid="php-files" />
-        </phploc>
-    </target>
-
-    <target name="phpmd" description="Mess detection">
-        <exec
-            passthru="${passthru}"
-            dir="${project.basedir}/src"
-            command="phpmd ${project.basedir}/src xml cleancode,codesize,controversial,design,naming,unusedcode
-            --suffixes .php
-            --reportfile ${project.basedir}/build/logs/pmd.xml" />
+            command="./vendor/bin/php-cs-fixer fix --verbose" />
     </target>
 
     <target name="build" description="Build app">
@@ -68,8 +44,5 @@
         <phingCall target="php-cs-fixer" />
         <phingCall target="phplint" />
         <phingCall target="phpunit" />
-        <phingCall target="phpcpd" />
-        <phingCall target="phpmd" />
-        <phingCall target="phploc" />
     </target>
 </project>
