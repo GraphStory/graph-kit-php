@@ -184,19 +184,23 @@ CYPHER;
      */
     public static function save(User $user)
     {
+        // If there's not already a node on the User model, then this is a new User
         if (!$user->node) {
             $user->node = new Node(Neo4jClient::client());
         }
 
+        // Create the User label
         $userLabel = Neo4jClient::client()->makeLabel('User');
+
         // set properties
         $user->node->setProperty('username', $user->username);
         $user->node->setProperty('firstname', $user->firstname);
         $user->node->setProperty('lastname', $user->lastname);
-        // save the node
+
+        // save the node and the label
         $user->node->save()->addLabels(array($userLabel));
 
-        //set the id on the user object
+        // set the node id as id on the user object
         $user->id = $user->node->getId();
 
         return $user;
@@ -224,7 +228,7 @@ CYPHER;
         $userArray = array();
         foreach ($results as $row) {
             $user = self::fromNode($row['x']);
-            if (isset($row['common'])){
+            if (isset($row['common'])) {
                 $user->commonFriends = $row['common'];
             }
             $userArray[] = $user;

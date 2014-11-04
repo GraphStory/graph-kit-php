@@ -97,14 +97,18 @@ $app->add(new SessionCookie(
 ));
 
 $isLoggedIn = function () use ($app) {
-    if (!isset($_SESSION['username']) && empty($_SESSION['username'])) {
+    if (empty($_SESSION['username'])) {
         $app->redirect($app->urlFor('home'));
     }
 };
 
 // home
 $app->get('/', function () use ($app) {
-    $app->render('home/index.mustache');
+    $isAuthenticated = (empty($_SESSION['username'])) ? false : true;
+
+    $app->render('home/index.mustache', array(
+        'isAuthenticated' => $isAuthenticated,
+    ));
 })->name('home');
 
 $app->get('/login', function () use ($app) {
@@ -340,7 +344,7 @@ $app->put('/posts', function () use ($app) {
     $request = $app->request();
     $contentParams = json_decode($request->getBody());
     $content = ContentService::getContentById(
-        $_SESSION['username'], 
+        $_SESSION['username'],
         $contentParams->contentId
     );
     $content = $content[0];
@@ -379,13 +383,6 @@ $app->get('/posts/:postId', $isLoggedIn, function ($postId) use ($app) {
         'postContent' => $content,
     ));
 })->name('social-post');
-
-$app->get('/test', function () use ($app) {
-    $username = 'ajordan';
-    $contentId = '241371997009';
-    ContentService::delete($username, $contentId);
-    var_dump(count(ContentService::getContentById($username, $contentId)));
-});
 
 // Run app
 $app->run();

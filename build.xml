@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="Graph Story's Graph Kit for PHP" default="build">
+
+    <property file="build.properties" />
+
+    <fileset id="php-files" dir="${project.basedir}/src">
+        <include name="**/*.php" />
+    </fileset>
+
+    <target name="clean" description="Clean build path">
+        <delete dir="${project.basedir}/build" />
+        <mkdir dir="${project.basedir}/build" />
+        <mkdir dir="${project.basedir}/build/coverage" />
+        <mkdir dir="${project.basedir}/build/logs" />
+    </target>
+
+    <target name="phplint" description="Running PHP lint check">
+        <phplint haltonfailure="true">
+            <fileset refid="php-files" />
+            <fileset dir="${project.basedir}/public">
+                <include name="index.php" />
+            </fileset>
+        </phplint>
+    </target>
+
+    <target name="phpunit" description="Running unit tests">
+        <exec
+            passthru="${passthru}"
+            dir="${project.basedir}"
+            command="./vendor/bin/phpunit"
+            />
+    </target>
+
+    <target name="php-cs-fixer" description="Fix CS violations">
+        <exec
+            passthru="${passthru}"
+            dir="${project.basedir}"
+            command="./vendor/bin/php-cs-fixer fix --verbose" />
+    </target>
+
+    <target name="build" description="Build app">
+        <phingCall target="clean" />
+        <phingCall target="php-cs-fixer" />
+        <phingCall target="phplint" />
+        <phingCall target="phpunit" />
+    </target>
+</project>

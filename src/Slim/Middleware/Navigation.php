@@ -7,7 +7,7 @@ use Slim\Middleware;
 /**
  * Navigation Middleware
  *
- * Constructs array of navigation items and appends them to the view. 
+ * Constructs array of navigation items and appends them to the view.
  */
 class Navigation extends Middleware
 {
