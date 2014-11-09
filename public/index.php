@@ -1,8 +1,7 @@
 <?php
 
 if (!defined('SLIM_MODE')) {
-    $mode = getenv('SLIM_MODE') ? getenv('SLIM_MODE') : 'production';
-    define('SLIM_MODE', $mode);
+    define('SLIM_MODE', getenv('SLIM_MODE') ?: 'production');
 }
 
 define('APPLICATION_PATH', realpath(dirname(__DIR__)));

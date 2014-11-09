@@ -43,7 +43,8 @@
     "require-dev": {
         "phing/phing": "~2.8",
         "fabpot/php-cs-fixer": "~0.5",
-        "phpunit/phpunit": "~4"
+        "phpunit/phpunit": "3.7.*",
+        "there4/slim-test-helpers": "dev-master"
     },
     "autoload": {
         "psr-4": {

@@ -2,15 +2,14 @@
 
 namespace GraphStory\GraphKit\Test\Service;
 
-use GraphStory\GraphKit\Test\GraphKitTestCase;
+use GraphStory\GraphKit\Test\TestCase;
 use GraphStory\GraphKit\Model\User,
     GraphStory\GraphKit\Service\UserService;
 
-class UserServiceTest extends GraphKitTestCase
+class UserServiceTest extends TestCase
 {
 
     private $standardUser;
-
     private $standardUserArray;
 
     public function __construct()
@@ -35,7 +34,6 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testCreateAndGetUser()
     {
-        $this->buildRealClient();
         $this->clearDB();
         $user = $this->standardUser;
         $userService = new UserService();
@@ -53,7 +51,6 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testGetNodeByUsername()
     {
-        $this->buildRealClient();
         $this->clearDB();
         $this->createUser();
         $username = $this->standardUser->username;
@@ -67,7 +64,6 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testSearchUserByUsername()
     {
-        $this->buildRealClient();
         $this->clearDB();
         $this->createUser();
         $user2 = $this->createUser(true);
@@ -83,9 +79,8 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testSuggestions()
     {
-        $this->buildRealClient();
         $this->clearDB();
-        $this->loadGraph();
+        $this->loadDB();
         $username = 'bernhard.isidro';
         $service = new UserService();
         $suggestions = $service->friendSuggestions($username);
@@ -100,9 +95,8 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testFollowUser()
     {
-        $this->buildRealClient();
         $this->clearDB();
-        $this->loadGraph();
+        $this->loadDB();
         $username = 'bernhard.isidro';
         $service = new UserService();
         $suggestions = $service->friendSuggestions($username);
@@ -117,9 +111,8 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testUnfollowUser()
     {
-        $this->buildRealClient();
         $this->clearDB();
-        $this->loadGraph();
+        $this->loadDB();
         $username = 'bernhard.isidro';
         $service = new UserService();
         $following = $service->following($username);
@@ -134,21 +127,19 @@ class UserServiceTest extends GraphKitTestCase
      */
     public function testGetNodeById()
     {
-        $this->buildRealClient();
         $this->clearDB();
-        $this->loadGraph();
+        $this->loadDB();
         $username = 'bernhard.isidro';
         $service = new UserService();
         $user = $service->getByUsername($username);
         $id = $user->node->getId();
         $userById = $service->getByNodeId($id);
         $this->assertEquals($userById, $user);
-
     }
 
     private function checkUserIsFollowed($user, array $userMap)
     {
-        foreach ($userMap as $following){
+        foreach ($userMap as $following) {
             if ($following->username == $user) {
                 return true;
             }
@@ -159,7 +150,7 @@ class UserServiceTest extends GraphKitTestCase
 
     private function checkUserIsUnfollowed($user, array $userMap)
     {
-        foreach ($userMap as $following){
+        foreach ($userMap as $following) {
             if ($following->username == $user) {
                 return false;
             }
@@ -171,9 +162,9 @@ class UserServiceTest extends GraphKitTestCase
     private function createUser($randomized = false)
     {
         $user = $this->standardUser;
-        if ($randomized){
+        if ($randomized) {
             $user = new User();
-            $id = mt_rand(101,200);
+            $id = mt_rand(101, 200);
             $user->id = $id;
             $user->username = $this->standardUser->username . $id;
             $user->firstname = $this->standardUser->firstname;
