@@ -3,13 +3,10 @@
 namespace GraphStory\GraphKit\Service;
 
 use Everyman\Neo4j\Node;
+use GraphStory\GraphKit\Model\Location;
 
-class Location
+class LocationService
 {
-    public $id = null;
-    public $latitude = '';
-    public $longitude = '';
-
     public static function getByNodeId($id)
     {
         $node = Neo4jClient::client()->getNode($id);

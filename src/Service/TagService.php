@@ -3,14 +3,12 @@
 namespace GraphStory\GraphKit\Service;
 
 use Everyman\Neo4j\Node;
+use GraphStory\GraphKit\Model\Content;
+use GraphStory\GraphKit\Model\Tag;
 use GraphStory\GraphKit\Neo4jClient;
 
-class Tag
+class TagService
 {
-    protected $node = null;
-    public $id = null;
-    public $tagcontent = '';
-
     public static function getByNodeId($id)
     {
         $node = Neo4jClient::client()->getNode($id);
