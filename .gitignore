@@ -5,3 +5,4 @@
 .vagrant/
 config/secret.php
 /build/
+neo4j-community-*
