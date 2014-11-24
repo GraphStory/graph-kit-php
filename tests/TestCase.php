@@ -47,6 +47,7 @@ class TestCase extends \PHPUnit_Framework_TestCase
             $contents = file_get_contents($path);
             $queries = explode(';', $contents);
             array_pop($queries);
+
             return $queries;
         }
         throw new \Exception('Could not load the import queries.');

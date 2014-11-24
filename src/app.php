@@ -14,7 +14,7 @@ use Slim\Middleware\SessionCookie;
 use Slim\Mustache\Mustache;
 use Slim\Slim;
 
-if (getenv('SLIM_MODE') !== 'test'){
+if (getenv('SLIM_MODE') !== 'test') {
     $neo4jClient = new \Everyman\Neo4j\Client(
         $config['graphStory']['restHost'],
         $config['graphStory']['restPort']
