@@ -1,6 +1,6 @@
 <?php
 
-namespace GraphStory\GraphKit\Test\Unit;
+namespace GraphStory\GraphKit\Test;
 
 use GraphStory\GraphKit\Neo4jClient;
 use GraphStory\GraphKit\Test\Mock\Neo4jClientMock;
@@ -9,6 +9,9 @@ class Neo4jClientTest extends \PHPUnit_Framework_TestCase
 {
     private $mockClient;
 
+    /**
+     * @group unit
+     */
     public function testSetClient()
     {
         $client = $this->getMockClient();
