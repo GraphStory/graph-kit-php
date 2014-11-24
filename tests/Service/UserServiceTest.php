@@ -3,12 +3,11 @@
 namespace GraphStory\GraphKit\Test\Service;
 
 use GraphStory\GraphKit\Test\TestCase;
-use GraphStory\GraphKit\Model\User,
-    GraphStory\GraphKit\Service\UserService;
+use GraphStory\GraphKit\Model\User;
+use GraphStory\GraphKit\Service\UserService;
 
 class UserServiceTest extends TestCase
 {
-
     private $standardUser;
     private $standardUserArray;
 

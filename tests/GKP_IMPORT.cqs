@@ -143,64 +143,64 @@ SET n69.tag = 'vel';
 MERGE (n70:Tag {neogen_id: '8f5c4cde829f6b81197553eb93c7697f1ae292b0' })
 SET n70.tag = 'assumenda';
 MATCH (s1:User {neogen_id: '9bf768bcd7e3087618bd72386d87bc224042dd27'}), (e1:Content { neogen_id: '7bd0db8573f7d118ed6f8973f566fdf1165b936c'})
-MERGE (s1)-[edge1:LAST_POST]->(e1)
+MERGE (s1)-[edge1:CURRENTPOST]->(e1)
 ;
 MATCH (s2:User {neogen_id: 'c18d6287571873d47fe6650f208702d1dd62a4a2'}), (e2:Content { neogen_id: '27f0f3f74117b38052d63295d98f041a7beea319'})
-MERGE (s2)-[edge2:LAST_POST]->(e2)
+MERGE (s2)-[edge2:CURRENTPOST]->(e2)
 ;
 MATCH (s3:User {neogen_id: 'f2a9a3c4cfc18ca4f0c0d6eed4576015258486a5'}), (e3:Content { neogen_id: '2d83d6562d4ea2ee3eef23e6acf1c3df7d4ceacc'})
-MERGE (s3)-[edge3:LAST_POST]->(e3)
+MERGE (s3)-[edge3:CURRENTPOST]->(e3)
 ;
 MATCH (s4:User {neogen_id: '23f81251b0936f099d99f7d2ed20963274bd1a47'}), (e4:Content { neogen_id: '0edd0a7f14705a1123d88e0381c9f758f90d2ccd'})
-MERGE (s4)-[edge4:LAST_POST]->(e4)
+MERGE (s4)-[edge4:CURRENTPOST]->(e4)
 ;
 MATCH (s5:User {neogen_id: 'e7445a76a483eb4640a78ffbefa4510b8291bc26'}), (e5:Content { neogen_id: 'e533673686db7fba7928a03d68f21c468b881308'})
-MERGE (s5)-[edge5:LAST_POST]->(e5)
+MERGE (s5)-[edge5:CURRENTPOST]->(e5)
 ;
 MATCH (s6:User {neogen_id: '9214614b39e6e9d2136dabf2c5d76664489ebf4d'}), (e6:Content { neogen_id: 'a583a868731889d8408d8c1e006bcf6fc655055b'})
-MERGE (s6)-[edge6:LAST_POST]->(e6)
+MERGE (s6)-[edge6:CURRENTPOST]->(e6)
 ;
 MATCH (s7:User {neogen_id: '37f471f03d83326fa3d15f634a89b4b1b022d622'}), (e7:Content { neogen_id: 'f01655dc20cc55420f1b4a6a84c48486d9883870'})
-MERGE (s7)-[edge7:LAST_POST]->(e7)
+MERGE (s7)-[edge7:CURRENTPOST]->(e7)
 ;
 MATCH (s8:User {neogen_id: '2e39f8192224fa7b2a03078baea1e95c00a3a0c8'}), (e8:Content { neogen_id: '814fc413f522abfafe90f6f1c1df36d39fa53e5c'})
-MERGE (s8)-[edge8:LAST_POST]->(e8)
+MERGE (s8)-[edge8:CURRENTPOST]->(e8)
 ;
 MATCH (s9:User {neogen_id: 'd6b750b3ed66efe59d80c9ccb77a73875f75c5e8'}), (e9:Content { neogen_id: '28e76e3efe9c3f1d27f28ceb2c3057f776cefdf3'})
-MERGE (s9)-[edge9:LAST_POST]->(e9)
+MERGE (s9)-[edge9:CURRENTPOST]->(e9)
 ;
 MATCH (s10:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e10:Content { neogen_id: 'fa0738c418fd3619b2631c4b78b2aeda989c5c10'})
-MERGE (s10)-[edge10:LAST_POST]->(e10)
+MERGE (s10)-[edge10:CURRENTPOST]->(e10)
 ;
 MATCH (s11:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e11:Content { neogen_id: '86c59e1ffe32794d5697e4876a0caf5b8eda1241'})
-MERGE (s11)-[edge11:LAST_POST]->(e11)
+MERGE (s11)-[edge11:CURRENTPOST]->(e11)
 ;
 MATCH (s12:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e12:Content { neogen_id: 'f3a538cd61c6889cca5a386c5332d8232debdd4f'})
-MERGE (s12)-[edge12:LAST_POST]->(e12)
+MERGE (s12)-[edge12:CURRENTPOST]->(e12)
 ;
 MATCH (s13:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e13:Content { neogen_id: 'f3ae0fd6e9e033098a508afefec340835243b481'})
-MERGE (s13)-[edge13:LAST_POST]->(e13)
+MERGE (s13)-[edge13:CURRENTPOST]->(e13)
 ;
 MATCH (s14:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e14:Content { neogen_id: '92dd4882442eae2f179edb7e844b63259d9d7ea6'})
-MERGE (s14)-[edge14:LAST_POST]->(e14)
+MERGE (s14)-[edge14:CURRENTPOST]->(e14)
 ;
 MATCH (s15:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e15:Content { neogen_id: '9ffc9907a8459e08bab0cb773fb987daf8222ad1'})
-MERGE (s15)-[edge15:LAST_POST]->(e15)
+MERGE (s15)-[edge15:CURRENTPOST]->(e15)
 ;
 MATCH (s16:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e16:Content { neogen_id: '13a4a96f6aa11a2462d923dcc791f2844a21f65f'})
-MERGE (s16)-[edge16:LAST_POST]->(e16)
+MERGE (s16)-[edge16:CURRENTPOST]->(e16)
 ;
 MATCH (s17:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e17:Content { neogen_id: '4f76463275fe0af85f9a2a20fb589f338384f4a4'})
-MERGE (s17)-[edge17:LAST_POST]->(e17)
+MERGE (s17)-[edge17:CURRENTPOST]->(e17)
 ;
 MATCH (s18:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e18:Content { neogen_id: 'dddf90b90dcd74f1be2a4f521fe190fb9bf58464'})
-MERGE (s18)-[edge18:LAST_POST]->(e18)
+MERGE (s18)-[edge18:CURRENTPOST]->(e18)
 ;
 MATCH (s19:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e19:Content { neogen_id: '0d21b8c9e468487bb700294e8c83ef3d02a2b15e'})
-MERGE (s19)-[edge19:LAST_POST]->(e19)
+MERGE (s19)-[edge19:CURRENTPOST]->(e19)
 ;
 MATCH (s20:User {neogen_id: '7a518ddb42a5867681b340c5ba3efa500c63b316'}), (e20:Content { neogen_id: '67ce21605b87ccf4e4a3745bf47ef6ad2624311b'})
-MERGE (s20)-[edge20:LAST_POST]->(e20)
+MERGE (s20)-[edge20:CURRENTPOST]->(e20)
 ;
 MATCH (s21:Content {neogen_id: '7bd0db8573f7d118ed6f8973f566fdf1165b936c'}), (e21:Content { neogen_id: 'a9261ee0919c5a93baedfed2e88361f3d3f29688'})
 MERGE (s21)-[edge21:NEXT]->(e21)

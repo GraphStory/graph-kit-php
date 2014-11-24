@@ -21,11 +21,11 @@ class ContentService
     {
         $queryString =<<<CYPHER
 MATCH (user { username: {u}})
-OPTIONAL MATCH (user)-[r:LASTPOST]->(lastpost)
+OPTIONAL MATCH (user)-[r:CURRENTPOST]->(currentpost)
 DELETE r
-CREATE (user)-[:LASTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
-WITH p, collect(lastpost) as lastposts
-FOREACH (x IN lastposts | CREATE p-[:NEXTPOST]->x)
+CREATE (user)-[:CURRENTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
+WITH p, collect(currentpost) as currentposts
+FOREACH (x IN currentposts | CREATE p-[:NEXTPOST]->x)
 RETURN p, {u} as username, true as owner
 CYPHER;
 
@@ -88,16 +88,16 @@ CYPHER;
     }
 
     /**
-     * Returns true if Content is the most recent, or last, Content item
+     * Returns true if Content is the most recent, or current, Content item
      *
      * @param  string  $username  Username of content owner
      * @param  string  $contentId Content id
      * @return boolean True if Content is most recent, false otherwise
      */
-    public static function isLastPost($username, $contentId)
+    public static function isCurrentPost($username, $contentId)
     {
         $queryString = <<<CYPHER
-MATCH (u:User { username: { username }})-[:LASTPOST]->(c:Content { contentId: { contentId }}) RETURN c
+MATCH (u:User { username: { username }})-[:CURRENTPOST]->(c:Content { contentId: { contentId }}) RETURN c
 CYPHER;
 
         $query = new Query(
@@ -124,7 +124,7 @@ CYPHER;
     public static function isLeafPost($username, $contentId)
     {
         $queryString = <<<CYPHER
-MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(c:Content { contentId: { contentId }})
+MATCH (u:User { username: { username }})-[:CURRENTPOST|NEXTPOST*0..]->(c:Content { contentId: { contentId }})
 WHERE NOT (c)-[:NEXTPOST]->()
 RETURN c
 CYPHER;
@@ -154,23 +154,24 @@ CYPHER;
     {
         if (self::isLeafPost($username, $contentId)) {
             return <<<CYPHER
-MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(c:Content { contentId: { contentId }})
+MATCH (u:User { username: { username }})-[:CURRENTPOST|NEXTPOST*0..]->(c:Content { contentId: { contentId }})
 WITH c
 MATCH (c)-[r]-()
 DELETE c, r
 CYPHER;
         }
 
-        if (self::isLastPost($username, $contentId)) {
+        if (self::isCurrentPost($username, $contentId)) {
             return <<<CYPHER
-MATCH (u:User { username: { username }})-[lp:LASTPOST]->(del:Content { contentId: { contentId }})-[np:NEXTPOST]->(nextPost)
-CREATE UNIQUE (u)-[:LASTPOST]->(nextPost)
+MATCH (u:User { username: { username }})-[lp:CURRENTPOST]->(del:Content { contentId: { contentId }})-[np:NEXTPOST]->(nextPost)
+CREATE UNIQUE (u)-[:CURRENTPOST]->(nextPost)
 DELETE lp, del, np
 CYPHER;
         }
 
         return <<<CYPHER
-MATCH (u:User { username: { username }})-[:LASTPOST|NEXTPOST*0..]->(before),(before)-[delBefore]->(del:Content { contentId: { contentId }})-[delAfter]->(after)
+MATCH (u:User { username: { username }})-[:CURRENTPOST|NEXTPOST*0..]->(before),
+    (before)-[delBefore]->(del:Content { contentId: { contentId }})-[delAfter]->(after)
 CREATE UNIQUE (before)-[:NEXTPOST]->(after)
 DELETE del, delBefore, delAfter
 CYPHER;
@@ -188,7 +189,7 @@ CYPHER;
         $queryString = <<<CYPHER
 MATCH (usr:User { username: { u }})
 WITH usr
-MATCH (p:Content { contentId: { contentId }})-[:NEXTPOST*0..]-(l)-[:LASTPOST]-(u)
+MATCH (p:Content { contentId: { contentId }})-[:NEXTPOST*0..]-(l)-[:CURRENTPOST]-(u)
 RETURN p, u.username AS username, u = usr AS owner
 CYPHER;
 
@@ -222,7 +223,7 @@ CYPHER;
         $queryString = <<<CYPHER
 MATCH (u:User { username: { u }})-[:FOLLOWS*0..1]->f
 WITH DISTINCT f, u
-MATCH f-[:LASTPOST]-lp-[:NEXTPOST*0..]-p
+MATCH f-[:CURRENTPOST]-lp-[:NEXTPOST*0..]-p
 RETURN p, f.username as username, f=u as owner
 ORDER BY p.timestamp desc SKIP {skip} LIMIT 4
 CYPHER;

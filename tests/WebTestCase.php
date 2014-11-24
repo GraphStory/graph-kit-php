@@ -20,7 +20,6 @@ class WebTestCase extends There4WebTestCase
         $app = new Slim($config);
 
         // TODO: Include app.php file
-
         return $app;
     }
 
@@ -28,4 +27,4 @@ class WebTestCase extends There4WebTestCase
     {
         return $this->client;
     }
-} 
+}
