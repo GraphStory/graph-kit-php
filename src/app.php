@@ -29,7 +29,7 @@ if (getenv('SLIM_MODE') !== 'test') {
         $neo4jClient->getTransport()->useHttps();
     }
 
-// neo client
+    // neo client
     Neo4jClient::setClient($neo4jClient);
 }
 
