@@ -7,3 +7,4 @@ config/secret.php
 /build/
 neo4j-community-*
 test-db
+.php_cs_cache
