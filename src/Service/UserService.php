@@ -21,8 +21,8 @@ class UserService
         $userlabel = Neo4jClient::client()->makeLabel('User');
         $nodes = $userlabel->getNodes('username', $username);
 
-        if (empty($nodes) || count($nodes)==0) {
-            return null;
+        if (empty($nodes) || count($nodes) == 0) {
+            return;
         }
 
         return self::fromNode($nodes[0]);
@@ -40,7 +40,7 @@ class UserService
         $nodes = $userlabel->getNodes('username', $username);
 
         if (empty($nodes) || count($nodes) == 0) {
-            return null;
+            return;
         }
 
         return $nodes[0];
@@ -116,9 +116,9 @@ CYPHER;
      */
     public static function searchByUsername($username, $currentusername)
     {
-        $username = $username.'.*';
+        $username = $username . '.*';
         $queryString = "MATCH (n:User), (user:User { username:{c}}) WHERE (n.username =~ {u} AND n <> user) AND (NOT (user)-[:FOLLOWS]->(n)) RETURN n";
-        $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username,'c' => $currentusername));
+        $query = new Query(Neo4jClient::client(), $queryString, array('u' => $username, 'c' => $currentusername));
         $result = $query->getResultSet();
 
         return self::returnAsUsers($result);

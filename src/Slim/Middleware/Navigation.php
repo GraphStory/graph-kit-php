@@ -21,9 +21,9 @@ class Navigation extends Middleware
 
         $navigation = [
             ['caption' => 'Social Graph', 'href' => $app->urlFor('social-graph')],
-                /**
-                 * These links are for Graph Kit features currently "in the works"
-                 */
+        /**
+         * These links are for Graph Kit features currently "in the works"
+         */
                 /*
             ['caption' => 'Interest Graph', 'href' => '#'],
             ['caption' => 'Consumption Graph', 'href' => '#'],

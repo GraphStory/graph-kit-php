@@ -3,7 +3,6 @@
 $config = array();
 
 if ($url = getenv('GRAPHSTORY_URL')) {
-
     $graphstory = parse_url($url);
 
     $config = array(
