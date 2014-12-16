@@ -2,16 +2,16 @@
 
 $config = array();
 
-if (getenv('GRAPHSTORY_URL')) {
+if ($url = getenv('GRAPHSTORY_URL')) {
 
-    $url = parse_url(GRAPHSTORY_URL);
+    $graphstory = parse_url($url);
 
     $config = array(
         'graphStory' => array(
-            'restUsername' => $url['user'],
-            'restPassword' => $url['pass'],
-            'restHost' => $url['host'],
-            'restPort' => $url['port'],
+            'restUsername' => $graphstory['user'],
+            'restPassword' => $graphstory['pass'],
+            'restHost' => $graphstory['host'],
+            'restPort' => $graphstory['port'],
             'https' => true,
         ),
     );
