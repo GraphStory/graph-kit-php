@@ -2,9 +2,9 @@
 
 namespace GraphStory\GraphKit\Test\Service;
 
-use GraphStory\GraphKit\Test\TestCase;
 use GraphStory\GraphKit\Model\User;
 use GraphStory\GraphKit\Service\UserService;
+use GraphStory\GraphKit\Test\TestCase;
 
 class UserServiceTest extends TestCase
 {
@@ -70,7 +70,6 @@ class UserServiceTest extends TestCase
         $foundUsers = $service->searchByUsername($this->standardUser->username, $this->standardUser->username);
         $matchedUser = $foundUsers[0];
         $this->assertEquals($matchedUser->username, $user2->username);
-
     }
 
     /**

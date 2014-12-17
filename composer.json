@@ -42,9 +42,10 @@
     },
     "require-dev": {
         "phing/phing": "~2.8",
-        "fabpot/php-cs-fixer": "~0.5",
-        "phpunit/phpunit": "3.7.*",
-        "there4/slim-test-helpers": "dev-master"
+        "fabpot/php-cs-fixer": "~1",
+        "phpunit/phpunit": "~4.4",
+        "there4/slim-test-helpers": "dev-master",
+        "heroku/heroku-buildpack-php": "dev-master"
     },
     "autoload": {
         "psr-4": {

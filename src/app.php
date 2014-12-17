@@ -1,9 +1,9 @@
 <?php
 
 use GraphStory\GraphKit\Exception\JsonResponseEncodingException;
-use GraphStory\GraphKit\Neo4jClient;
 use GraphStory\GraphKit\Model\Content;
 use GraphStory\GraphKit\Model\User;
+use GraphStory\GraphKit\Neo4jClient;
 use GraphStory\GraphKit\Service\ContentService;
 use GraphStory\GraphKit\Service\UserService;
 use GraphStory\GraphKit\Slim\JsonResponse;
@@ -29,7 +29,7 @@ if (getenv('SLIM_MODE') !== 'test') {
         $neo4jClient->getTransport()->useHttps();
     }
 
-// neo client
+    // neo client
     Neo4jClient::setClient($neo4jClient);
 }
 
@@ -113,7 +113,6 @@ $app->post('/login', function () use ($app) {
 
         // match
         if (!is_null($checkuser)) {
-
             $_SESSION['username'] = $username;
 
             $app->redirect($app->urlFor('social-graph'));
@@ -170,7 +169,7 @@ $app->post('/user/add', function () use ($app) {
         } else {
             // show the "try again" message.
             $app->render('home/index.mustache', array(
-                'error' => 'The username "'.$username.'" already exists. Please try again.',
+                'error' => 'The username "' . $username . '" already exists. Please try again.',
             ));
         }
     } else {

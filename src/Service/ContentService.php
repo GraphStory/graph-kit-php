@@ -19,7 +19,7 @@ class ContentService
      */
     public static function add($username, Content $content)
     {
-        $queryString =<<<CYPHER
+        $queryString = <<<CYPHER
 MATCH (user { username: {u}})
 OPTIONAL MATCH (user)-[r:CURRENTPOST]->(currentpost)
 DELETE r
@@ -38,7 +38,7 @@ CYPHER;
                 'url' => $content->url,
                 'tagstr' => $content->tagstr,
                 'timestamp' => time(),
-                'contentId' => uniqid()
+                'contentId' => uniqid(),
             )
         );
         $result = $query->getResultSet();

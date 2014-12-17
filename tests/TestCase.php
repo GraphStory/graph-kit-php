@@ -8,7 +8,6 @@ use GraphStory\GraphKit\Neo4jClient;
 
 class TestCase extends \PHPUnit_Framework_TestCase
 {
-
     protected function setUp()
     {
         $neo4jClient = new Client('localhost', 7474);

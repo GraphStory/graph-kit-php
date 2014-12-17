@@ -6,14 +6,14 @@ if (!defined('SLIM_MODE')) {
 
 define('APPLICATION_PATH', realpath(dirname(__DIR__)));
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 require_once APPLICATION_PATH . '/vendor/autoload.php';
 
 use Zend\Config\Factory as ConfigFactory;
 
 $configPaths = sprintf(
-    '%s/config/{,*.}{global,%s,secret}.php',
+    '%s/config/{,*.}{global,%s,secret,heroku}.php',
     APPLICATION_PATH,
     SLIM_MODE
 );
