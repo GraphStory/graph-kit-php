@@ -2,7 +2,9 @@
 
 $config = array();
 
-if ($url = getenv('GRAPHSTORY_URL')) {
+$url = isset($_SERVER['GRAPHSTORY_URL']) ? $_SERVER['GRAPHSTORY_URL'] : getenv('GRAPHSTORY_URL');
+
+if ($url) {
     $graphstory = parse_url($url);
 
     $config = array(
