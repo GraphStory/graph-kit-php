@@ -1,5 +1,14 @@
 <?php
 
+# PHP_ENV is present for Engine Yard compatibility
+if (defined('PHP_ENV')) {
+    define('SLIM_MODE', getenv('PHP_ENV'));
+}
+
+if (isset($_SERVER['PHP_ENV'])) {
+    define('SLIM_MODE', $_SERVER['PHP_ENV']);
+}
+
 if (!defined('SLIM_MODE')) {
     define('SLIM_MODE', getenv('SLIM_MODE') ?: 'production');
 }
