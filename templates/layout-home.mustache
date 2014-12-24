@@ -86,7 +86,12 @@
         <div class="container">
             <hr>
             <footer>
-                <p>&copy; Graph Story, Inc. {{ copyrightYear }}</p>
+                <div class="col-md-6">
+                    <p>&copy; Graph Story, Inc. {{ copyrightYear }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="text-right">Application environment: {{ applicationEnvironment }}</p>
+                </div>
             </footer>
         </div> <!-- /container -->
         <script src="/js/lib/jquery.min.js"></script>
