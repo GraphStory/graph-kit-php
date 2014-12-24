@@ -74,6 +74,7 @@ $app->error(function (\Exception $e) use ($app) {
 $app->view(new Mustache());
 $app->view->parserOptions = $config['mustache'];
 $app->view->appendData(array('copyrightYear' => date('Y')));
+$app->view->appendData(array('applicationEnvironment' => SLIM_MODE));
 
 $app->add(new Navigation());
 $app->add(new SessionCookie(
