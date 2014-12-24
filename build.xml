@@ -41,8 +41,8 @@
 
     <target name="build" description="Build app">
         <phingCall target="clean" />
-        <phingCall target="php-cs-fixer" />
         <phingCall target="phplint" />
+        <phingCall target="php-cs-fixer" />
         <phingCall target="phpunit" />
     </target>
 </project>
