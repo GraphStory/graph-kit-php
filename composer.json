@@ -34,7 +34,7 @@
     "require": {
         "php": ">=5.3.0",
         "dearon/slim-mustache": "0.1.*",
-        "everyman/neo4jphp": "dev-master",
+        "neoxygen/neoclient": "~2.1",
         "monolog/monolog": "1.*",
         "mustache/mustache": "~2.7",
         "slim/slim": "2.*",
