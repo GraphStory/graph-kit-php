@@ -2,7 +2,7 @@
 
 namespace GraphStory\GraphKit;
 
-use Everyman\Neo4j\Client;
+use Neoxygen\NeoClient\Client;
 
 class Neo4jClient
 {

@@ -13,21 +13,22 @@ use Monolog\Logger;
 use Slim\Middleware\SessionCookie;
 use Slim\Mustache\Mustache;
 use Slim\Slim;
+use Neoxygen\NeoClient\ClientBuilder;
 
 if (getenv('SLIM_MODE') !== 'test') {
-    $neo4jClient = new \Everyman\Neo4j\Client(
-        $config['graphStory']['restHost'],
-        $config['graphStory']['restPort']
-    );
-
-    $neo4jClient->getTransport()->setAuth(
-        $config['graphStory']['restUsername'],
-        $config['graphStory']['restPassword']
-    );
-
-    if ($config['graphStory']['https']) {
-        $neo4jClient->getTransport()->useHttps();
-    }
+    $dsn = parse_url($config['graphStory']['restHost']);
+    $neo4jClient = ClientBuilder::create()
+        ->addConnection(
+            'default',
+            $dsn['scheme'],
+            $dsn['host'],
+            $config['graphStory']['restPort'],
+            true,
+            $config['graphStory']['restUsername'],
+            $config['graphStory']['restPassword']
+        )
+        ->setAutoFormatResponse(true)
+        ->build();
 
     // neo client
     Neo4jClient::setClient($neo4jClient);
