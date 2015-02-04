@@ -2,9 +2,6 @@
 
 namespace GraphStory\GraphKit\Service;
 
-use Everyman\Neo4j\Cypher\Query;
-use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Query\ResultSet;
 use GraphStory\GraphKit\Model\Content;
 use GraphStory\GraphKit\Neo4jClient;
 
@@ -227,16 +224,12 @@ MATCH f-[:CURRENTPOST]-lp-[:NEXTPOST*0..]-p
 RETURN p, f.username as username, f=u as owner
 ORDER BY p.timestamp desc SKIP {skip} LIMIT 4
 CYPHER;
-
-        $query = new Query(
-            Neo4jClient::client(),
-            $queryString,
-            array(
-                'u' => $username,
-                'skip' => $skip,
-            )
+        $p = array(
+            'u' => (string) $username,
+            'skip' => (int) $skip
         );
-        $result = $query->getResultSet();
+
+        $result = Neo4jClient::client()->sendCypherQuery($queryString, $p)->getResult();
 
         return self::returnMappedContent($result);
     }
