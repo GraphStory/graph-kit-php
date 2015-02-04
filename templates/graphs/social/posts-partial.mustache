@@ -1,12 +1,12 @@
-<tr id="tr_{{ contentId }}">
+<tr id="tr_{{ getContentId }}">
     <td>
-        <a href="{{ url }}" id="url_{{ contentId }}" target="_blank">{{ title }}</a><br>
-        tags: {{ tagstr }} :: Posted by {{ userNameForPost }} at <a href="{{ postUrl }}{{ contentId }}">{{ timestamp }}</a>
+        <a href="{{ getUrl }}" id="url_{{ getContentId }}" target="_blank">{{ getTitle }}</a><br>
+        tags: {{ getTagstr }} :: Posted by {{ getOwner.getUsername }} at <a href="{{ getPostUrl }}{{ getContentId }}">{{ getTimestamp }}</a>
     </td>
     <td>
         {{# owner }}
-            <button type="button" class="editcontent btn btn-primary btn-xs" id="edit_{{ contentId }}">Edit</button>&nbsp;
-            <button type="button" class="deletecontent btn btn-danger btn-xs" id="delete_{{ contentId }}">Delete</button>
+            <button type="button" class="editcontent btn btn-primary btn-xs" id="edit_{{ getContentId }}">Edit</button>&nbsp;
+            <button type="button" class="deletecontent btn btn-danger btn-xs" id="delete_{{ getContentId }}">Delete</button>
         {{/ owner }}<br>
     </td>
 </tr>

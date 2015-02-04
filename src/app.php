@@ -163,7 +163,7 @@ $app->post('/user/add', function () use ($app) {
         if (is_null($checkuser)) {
             // setup the object
             $user = new User();
-            $user->username = $username;
+            $user->setUsername($username);
             // save it
             UserService::save($user);
 
@@ -312,12 +312,12 @@ $app->post('/posts', function () use ($app) {
     $contentParams = json_decode($request->getBody());
 
     $content = new Content();
-    $content->title = $contentParams->title;
-    $content->url = $contentParams->url;
+    $content->setTitle($contentParams->title);
+    $content->setUrl($contentParams->url);
 
     // are tags set?
     if (isset($contentParams->tagstr)) {
-        $content->tagstr = $contentParams->tagstr;
+        $content->setTagstr($contentParams->tagstr);
     }
 
     $result = ContentService::add($_SESSION['username'], $content);

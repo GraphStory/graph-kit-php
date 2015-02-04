@@ -4,7 +4,7 @@ namespace GraphStory\GraphKit\Service;
 
 use GraphStory\GraphKit\Model\User;
 use GraphStory\GraphKit\Neo4jClient;
-use Rhumsaa\Uuid\Uuid;
+use Neoxygen\NeoClient\Formatter\Node;
 
 class UserService
 {
@@ -21,13 +21,14 @@ class UserService
             'username' => (string) $username
         );
         $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
-        $user = $result->getSingleNode('User');
+        $user = $result->get('user');
 
-        if (empty($nodes) || count($nodes) === 0) {
-            return;
+        if (null !== $user) {
+
+            return self::fromNode($user);
         }
 
-        return self::fromNode($user);
+        return null;
     }
 
     /**
@@ -190,20 +191,18 @@ CYPHER;
      */
     public static function save(User $user)
     {
-        // If user has no id, then set one :
-        if (null === $user->uuid) {
-            $user->uuid = self::getNewId();
-        }
         $query = 'MERGE (user:User {username: {username}})
         ON CREATE SET user.firstname = {firstname}, user.lastname = {lastname}
         RETURN user';
         $params = array(
-            'username' => (string) $user->username,
-            'firstname' => (string) $user->firstname,
-            'lastname' => (string) $user->lastname
+            'username' => $user->getUsername(),
+            'firstname' => $user->getFirstname(),
+            'lastname' => $user->getLastname()
         );
 
-        return $user;
+        $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
+
+        return self::fromNode($result->get('user'));
     }
 
     /**
@@ -240,25 +239,17 @@ CYPHER;
     /**
      * Create User object from Node
      *
-     * @param  Node $node User node
+     * @param  Node $node Neo4j Node Object
      * @return User
      */
-    protected static function fromNode(Node $node)
+    public static function fromNode(Node $node)
     {
         $user = new User();
-        $user->id = $node->getId();
-        $user->username = $node->getProperty('username');
-        $user->firstname = $node->getProperty('firstname');
-        $user->lastname = $node->getProperty('lastname');
-        $user->node = $node;
+        $user->setId($node->getId());
+        $user->setUsername($node->getProperty('username'));
+        $user->setFirstname($node->getProperty('firstname'));
+        $user->getLastname($node->getProperty('lastname'));
 
         return $user;
-    }
-
-    private static function getNewId()
-    {
-        $id = Uuid::uuid4();
-
-        return $id->toString();
     }
 }
