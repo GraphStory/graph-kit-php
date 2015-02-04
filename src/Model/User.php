@@ -4,11 +4,14 @@ namespace GraphStory\GraphKit\Model;
 
 class User
 {
-    public $node;
-    public $id;
+    public $uuid;
+
     public $username;
+
     public $firstname;
+
     public $lastname;
+
     public $commonFriends;
 
     public function toArray()

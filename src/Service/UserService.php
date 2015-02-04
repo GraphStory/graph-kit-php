@@ -2,11 +2,9 @@
 
 namespace GraphStory\GraphKit\Service;
 
-use Everyman\Neo4j\Cypher\Query;
-use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Query\ResultSet;
 use GraphStory\GraphKit\Model\User;
 use GraphStory\GraphKit\Neo4jClient;
+use Rhumsaa\Uuid\Uuid;
 
 class UserService
 {
@@ -18,14 +16,18 @@ class UserService
      */
     public static function getByUsername($username)
     {
-        $userlabel = Neo4jClient::client()->makeLabel('User');
-        $nodes = $userlabel->getNodes('username', $username);
+        $query = 'MATCH (user:User) WHERE user.username = {username} RETURN user';
+        $params = array(
+            'username' => (string) $username
+        );
+        $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
+        $user = $result->getSingleNode('User');
 
-        if (empty($nodes) || count($nodes) == 0) {
+        if (empty($nodes) || count($nodes) === 0) {
             return;
         }
 
-        return self::fromNode($nodes[0]);
+        return self::fromNode($user);
     }
 
     /**
@@ -36,14 +38,18 @@ class UserService
      */
     public static function getNodeByUsername($username)
     {
-        $userlabel = Neo4jClient::client()->makeLabel('User');
-        $nodes = $userlabel->getNodes('username', $username);
+        $query = 'MATCH (user:User) WHERE u.username = {username} RETURN user';
+        $params = array(
+            'username' => (string) $username
+        );
+        $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
+        $user = $result->getSingleNode('User');
 
         if (empty($nodes) || count($nodes) == 0) {
             return;
         }
 
-        return $nodes[0];
+        return $user;
     }
 
     /**
@@ -184,24 +190,18 @@ CYPHER;
      */
     public static function save(User $user)
     {
-        // If there's not already a node on the User model, then this is a new User
-        if (!$user->node) {
-            $user->node = new Node(Neo4jClient::client());
+        // If user has no id, then set one :
+        if (null === $user->uuid) {
+            $user->uuid = self::getNewId();
         }
-
-        // Create the User label
-        $userLabel = Neo4jClient::client()->makeLabel('User');
-
-        // set properties
-        $user->node->setProperty('username', $user->username);
-        $user->node->setProperty('firstname', $user->firstname);
-        $user->node->setProperty('lastname', $user->lastname);
-
-        // save the node and the label
-        $user->node->save()->addLabels(array($userLabel));
-
-        // set the node id as id on the user object
-        $user->id = $user->node->getId();
+        $query = 'MERGE (user:User {username: {username}})
+        ON CREATE SET user.firstname = {firstname}, user.lastname = {lastname}
+        RETURN user';
+        $params = array(
+            'username' => (string) $user->username,
+            'firstname' => (string) $user->firstname,
+            'lastname' => (string) $user->lastname
+        );
 
         return $user;
     }
@@ -253,5 +253,12 @@ CYPHER;
         $user->node = $node;
 
         return $user;
+    }
+
+    private static function getNewId()
+    {
+        $id = Uuid::uuid4();
+
+        return $id->toString();
     }
 }

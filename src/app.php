@@ -16,16 +16,20 @@ use Slim\Slim;
 use Neoxygen\NeoClient\ClientBuilder;
 
 if (getenv('SLIM_MODE') !== 'test') {
-    $dsn = parse_url($config['graphStory']['restHost']);
+    $dsn['scheme'] = $config['graphStory']['https'] ? 'https' : 'http';
+    $dsn['host'] = $config['graphStory']['restHost'];
+    $dsn['port'] = $config['graphStory']['restPort'];
+    $dsn['user'] = $config['graphStory']['restUsername'];
+    $dsn['password'] = $config['graphStory']['restPassword'];
     $neo4jClient = ClientBuilder::create()
         ->addConnection(
             'default',
             $dsn['scheme'],
             $dsn['host'],
-            $config['graphStory']['restPort'],
+            $dsn['port'],
             true,
-            $config['graphStory']['restUsername'],
-            $config['graphStory']['restPassword']
+            $dsn['user'],
+            $dsn['password']
         )
         ->setAutoFormatResponse(true)
         ->build();

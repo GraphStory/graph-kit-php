@@ -38,7 +38,8 @@
         "monolog/monolog": "1.*",
         "mustache/mustache": "~2.7",
         "slim/slim": "2.*",
-        "zendframework/zend-config": "~2.3"
+        "zendframework/zend-config": "~2.3",
+        "rhumsaa/uuid": "~2.8"
     },
     "require-dev": {
         "phing/phing": "~2.8",

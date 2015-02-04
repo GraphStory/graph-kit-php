@@ -8,6 +8,9 @@ class Neo4jClient
 {
     protected static $client = null;
 
+    /**
+     * @return \Neoxygen\NeoClient\Client|null
+     */
     public static function client()
     {
         return self::$client;
