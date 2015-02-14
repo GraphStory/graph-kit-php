@@ -50,6 +50,18 @@ $app->container->singleton('logger', function () use ($config) {
     return $logger;
 });
 
+$app->container->singleton('neo4j', function () use ($neo4jClient) {
+    $neo = $neo4jClient;
+
+    return $neo;
+});
+
+$app->container->singleton('userService', function() use ($app) {
+    $userService = new UserService($app->neo);
+
+    return $userService;
+});
+
 $app->jsonResponse = function () use ($app) {
     return new JsonResponse($app->response);
 };

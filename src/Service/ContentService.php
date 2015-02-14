@@ -21,25 +21,22 @@ class ContentService
 MATCH (user { username: {u}})
 OPTIONAL MATCH (user)-[r:CURRENTPOST]->(currentpost)
 DELETE r
-CREATE (user)-[:CURRENTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
-WITH p, collect(currentpost) as currentposts
-FOREACH (x IN currentposts | CREATE p-[:NEXTPOST]->x)
-RETURN p, {u} as username, true as owner
+CREATE (user)-[re:CURRENTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
+WITH p, collect(currentpost) as currentposts, re
+FOREACH (x IN currentposts | CREATE p-[rel:NEXTPOST]->x)
+RETURN p as posts, re
 CYPHER;
 
-        $query = new Query(
-            Neo4jClient::client(),
-            $queryString,
-            array(
-                'u' => $username,
-                'title' => $content->title,
-                'url' => $content->url,
-                'tagstr' => $content->tagstr,
-                'timestamp' => time(),
-                'contentId' => uniqid(),
-            )
+        $params = array(
+            'u' => $username,
+            'title' => $content->getTitle(),
+            'url' => $content->getUrl(),
+            'tagstr' => $content->getTagstr(),
+            'timestamp' => time(),
+            'contentId' => uniqid(),
         );
-        $result = $query->getResultSet();
+
+        $result = Neo4jClient::client()->sendCypherQuery($queryString, $params)->getResult();
 
         return self::returnMappedContent($result);
     }
@@ -218,7 +215,6 @@ CYPHER;
      */
     public static function getContent($username, $skip)
     {
-        $username = 'ajordan';
         $queryString = <<<CYPHER
 MATCH (u:User { username: { u }})
 OPTIONAL MATCH (u)-[:FOLLOWS]->(f)
@@ -235,6 +231,10 @@ CYPHER;
         );
 
         $result = Neo4jClient::client()->sendCypherQuery($queryString, $p)->getResult();
+
+        if (null === $result->getAll('post')) {
+            return array();
+        }
 
         return self::returnMappedContent($result);
     }
