@@ -2,11 +2,9 @@
 
 namespace GraphStory\GraphKit\Service;
 
-use Everyman\Neo4j\Cypher\Query;
-use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Query\ResultSet;
 use GraphStory\GraphKit\Model\Content;
 use GraphStory\GraphKit\Neo4jClient;
+use Neoxygen\NeoClient\Formatter\Result;
 
 class ContentService
 {
@@ -23,25 +21,22 @@ class ContentService
 MATCH (user { username: {u}})
 OPTIONAL MATCH (user)-[r:CURRENTPOST]->(currentpost)
 DELETE r
-CREATE (user)-[:CURRENTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
-WITH p, collect(currentpost) as currentposts
-FOREACH (x IN currentposts | CREATE p-[:NEXTPOST]->x)
-RETURN p, {u} as username, true as owner
+CREATE (user)-[re:CURRENTPOST]->(p:Content { title:{title}, url:{url}, tagstr:{tagstr}, timestamp:{timestamp}, contentId:{contentId} })
+WITH p, collect(currentpost) as currentposts, re
+FOREACH (x IN currentposts | CREATE p-[rel:NEXTPOST]->x)
+RETURN p as posts, re
 CYPHER;
 
-        $query = new Query(
-            Neo4jClient::client(),
-            $queryString,
-            array(
-                'u' => $username,
-                'title' => $content->title,
-                'url' => $content->url,
-                'tagstr' => $content->tagstr,
-                'timestamp' => time(),
-                'contentId' => uniqid(),
-            )
+        $params = array(
+            'u' => $username,
+            'title' => $content->getTitle(),
+            'url' => $content->getUrl(),
+            'tagstr' => $content->getTagstr(),
+            'timestamp' => time(),
+            'contentId' => uniqid(),
         );
-        $result = $query->getResultSet();
+
+        $result = Neo4jClient::client()->sendCypherQuery($queryString, $params)->getResult();
 
         return self::returnMappedContent($result);
     }
@@ -221,22 +216,29 @@ CYPHER;
     public static function getContent($username, $skip)
     {
         $queryString = <<<CYPHER
-MATCH (u:User { username: { u }})-[:FOLLOWS*0..1]->f
-WITH DISTINCT f, u
-MATCH f-[:CURRENTPOST]-lp-[:NEXTPOST*0..]-p
-RETURN p, f.username as username, f=u as owner
-ORDER BY p.timestamp desc SKIP {skip} LIMIT 4
+MATCH (u:User { username: { u }})
+OPTIONAL MATCH (u)-[:FOLLOWS]->(f)
+OPTIONAL MATCH (f)-[r:CURRENTPOST|:NEXTPOST*]->(post)
+WITH post, f, r
+ORDER BY post.timestamp DESC
+SKIP {skip}
+LIMIT 4
+RETURN r, f, collect(post) as posts
+UNION
+MATCH (u:User {username: {u}})
+OPTIONAL MATCH (u)-[r:CURRENTPOST]->(post)
+RETURN r, null as f, collect(post) as posts
 CYPHER;
-
-        $query = new Query(
-            Neo4jClient::client(),
-            $queryString,
-            array(
-                'u' => $username,
-                'skip' => $skip,
-            )
+        $p = array(
+            'u' => (string) $username,
+            'skip' => (int) $skip
         );
-        $result = $query->getResultSet();
+
+        $result = Neo4jClient::client()->sendCypherQuery($queryString, $p)->getResult();
+
+        if (null === $result->getAll('posts')) {
+            return array();
+        }
 
         return self::returnMappedContent($result);
     }
@@ -260,16 +262,21 @@ CYPHER;
      * @param  ResultSet $results
      * @return Content[]
      */
-    protected static function returnMappedContent(ResultSet $results)
+    protected static function returnMappedContent(Result $results)
     {
         $mappedContentArray = array();
 
-        foreach ($results as $row) {
-            $mappedContentArray[] = self::createFromNode(
-                $row['p'],
-                $row['username'],
-                $row['owner']
-            );
+        foreach ($results->getAll('posts') as $post) {
+            $content = new Content();
+            $content->setId($post->getId());
+            $content->setContentId($post->getProperty('contentId'));
+            $content->setTagstr($post->getProperty('tagstr'));
+            $content->setTimestamp($post->getProperty('timestamp'));
+            $content->setTitle($post->getProperty('title'));
+            $content->setUrl($post->getProperty('url'));
+            $content->setOwner(UserService::fromNode($post->getSingleRelationship(null, 'IN')->getStartNode()));
+
+            $mappedContentArray[] = $content;
         }
 
         return $mappedContentArray;

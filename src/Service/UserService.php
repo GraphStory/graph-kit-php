@@ -2,11 +2,9 @@
 
 namespace GraphStory\GraphKit\Service;
 
-use Everyman\Neo4j\Cypher\Query;
-use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Query\ResultSet;
 use GraphStory\GraphKit\Model\User;
 use GraphStory\GraphKit\Neo4jClient;
+use Neoxygen\NeoClient\Formatter\Node;
 
 class UserService
 {
@@ -18,14 +16,19 @@ class UserService
      */
     public static function getByUsername($username)
     {
-        $userlabel = Neo4jClient::client()->makeLabel('User');
-        $nodes = $userlabel->getNodes('username', $username);
+        $query = 'MATCH (user:User) WHERE user.username = {username} RETURN user';
+        $params = array(
+            'username' => (string) $username
+        );
+        $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
+        $user = $result->get('user');
 
-        if (empty($nodes) || count($nodes) == 0) {
-            return;
+        if (null !== $user) {
+
+            return self::fromNode($user);
         }
 
-        return self::fromNode($nodes[0]);
+        return null;
     }
 
     /**
@@ -36,14 +39,18 @@ class UserService
      */
     public static function getNodeByUsername($username)
     {
-        $userlabel = Neo4jClient::client()->makeLabel('User');
-        $nodes = $userlabel->getNodes('username', $username);
+        $query = 'MATCH (user:User) WHERE u.username = {username} RETURN user';
+        $params = array(
+            'username' => (string) $username
+        );
+        $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
+        $user = $result->getSingleNode('User');
 
         if (empty($nodes) || count($nodes) == 0) {
             return;
         }
 
-        return $nodes[0];
+        return $user;
     }
 
     /**
@@ -184,26 +191,18 @@ CYPHER;
      */
     public static function save(User $user)
     {
-        // If there's not already a node on the User model, then this is a new User
-        if (!$user->node) {
-            $user->node = new Node(Neo4jClient::client());
-        }
+        $query = 'MERGE (user:User {username: {username}})
+        ON CREATE SET user.firstname = {firstname}, user.lastname = {lastname}
+        RETURN user';
+        $params = array(
+            'username' => $user->getUsername(),
+            'firstname' => $user->getFirstname(),
+            'lastname' => $user->getLastname()
+        );
 
-        // Create the User label
-        $userLabel = Neo4jClient::client()->makeLabel('User');
+        $result = Neo4jClient::client()->sendCypherQuery($query, $params)->getResult();
 
-        // set properties
-        $user->node->setProperty('username', $user->username);
-        $user->node->setProperty('firstname', $user->firstname);
-        $user->node->setProperty('lastname', $user->lastname);
-
-        // save the node and the label
-        $user->node->save()->addLabels(array($userLabel));
-
-        // set the node id as id on the user object
-        $user->id = $user->node->getId();
-
-        return $user;
+        return self::fromNode($result->get('user'));
     }
 
     /**
@@ -240,17 +239,16 @@ CYPHER;
     /**
      * Create User object from Node
      *
-     * @param  Node $node User node
+     * @param  Node $node Neo4j Node Object
      * @return User
      */
-    protected static function fromNode(Node $node)
+    public static function fromNode(Node $node)
     {
         $user = new User();
-        $user->id = $node->getId();
-        $user->username = $node->getProperty('username');
-        $user->firstname = $node->getProperty('firstname');
-        $user->lastname = $node->getProperty('lastname');
-        $user->node = $node;
+        $user->setId($node->getId());
+        $user->setUsername($node->getProperty('username'));
+        $user->setFirstname($node->getProperty('firstname'));
+        $user->getLastname($node->getProperty('lastname'));
 
         return $user;
     }

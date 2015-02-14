@@ -13,21 +13,26 @@ use Monolog\Logger;
 use Slim\Middleware\SessionCookie;
 use Slim\Mustache\Mustache;
 use Slim\Slim;
+use Neoxygen\NeoClient\ClientBuilder;
 
 if (getenv('SLIM_MODE') !== 'test') {
-    $neo4jClient = new \Everyman\Neo4j\Client(
-        $config['graphStory']['restHost'],
-        $config['graphStory']['restPort']
-    );
-
-    $neo4jClient->getTransport()->setAuth(
-        $config['graphStory']['restUsername'],
-        $config['graphStory']['restPassword']
-    );
-
-    if ($config['graphStory']['https']) {
-        $neo4jClient->getTransport()->useHttps();
-    }
+    $dsn['scheme'] = $config['graphStory']['https'] ? 'https' : 'http';
+    $dsn['host'] = $config['graphStory']['restHost'];
+    $dsn['port'] = $config['graphStory']['restPort'];
+    $dsn['user'] = $config['graphStory']['restUsername'];
+    $dsn['password'] = $config['graphStory']['restPassword'];
+    $neo4jClient = ClientBuilder::create()
+        ->addConnection(
+            'default',
+            $dsn['scheme'],
+            $dsn['host'],
+            $dsn['port'],
+            true,
+            $dsn['user'],
+            $dsn['password']
+        )
+        ->setAutoFormatResponse(true)
+        ->build();
 
     // neo client
     Neo4jClient::setClient($neo4jClient);
@@ -43,6 +48,18 @@ $app->container->singleton('logger', function () use ($config) {
     ));
 
     return $logger;
+});
+
+$app->container->singleton('neo4j', function () use ($neo4jClient) {
+    $neo = $neo4jClient;
+
+    return $neo;
+});
+
+$app->container->singleton('userService', function() use ($app) {
+    $userService = new UserService($app->neo);
+
+    return $userService;
 });
 
 $app->jsonResponse = function () use ($app) {
@@ -158,7 +175,7 @@ $app->post('/user/add', function () use ($app) {
         if (is_null($checkuser)) {
             // setup the object
             $user = new User();
-            $user->username = $username;
+            $user->setUsername($username);
             // save it
             UserService::save($user);
 
@@ -307,12 +324,12 @@ $app->post('/posts', function () use ($app) {
     $contentParams = json_decode($request->getBody());
 
     $content = new Content();
-    $content->title = $contentParams->title;
-    $content->url = $contentParams->url;
+    $content->setTitle($contentParams->title);
+    $content->setUrl($contentParams->url);
 
     // are tags set?
     if (isset($contentParams->tagstr)) {
-        $content->tagstr = $contentParams->tagstr;
+        $content->setTagstr($contentParams->tagstr);
     }
 
     $result = ContentService::add($_SESSION['username'], $content);

@@ -2,12 +2,15 @@
 
 namespace GraphStory\GraphKit;
 
-use Everyman\Neo4j\Client;
+use Neoxygen\NeoClient\Client;
 
 class Neo4jClient
 {
     protected static $client = null;
 
+    /**
+     * @return \Neoxygen\NeoClient\Client|null
+     */
     public static function client()
     {
         return self::$client;
