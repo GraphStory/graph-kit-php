@@ -224,6 +224,10 @@ ORDER BY post.timestamp DESC
 SKIP {skip}
 LIMIT 4
 RETURN r, f, collect(post) as posts
+UNION
+MATCH (u:User {username: {u}})
+OPTIONAL MATCH (u)-[r:CURRENTPOST]->(post)
+RETURN r, null as f, collect(post) as posts
 CYPHER;
         $p = array(
             'u' => (string) $username,
@@ -232,7 +236,7 @@ CYPHER;
 
         $result = Neo4jClient::client()->sendCypherQuery($queryString, $p)->getResult();
 
-        if (null === $result->getAll('post')) {
+        if (null === $result->getAll('posts')) {
             return array();
         }
 
