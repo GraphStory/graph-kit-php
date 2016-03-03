@@ -28,17 +28,24 @@
             "homepage": "https://github.com/GraphStory/graph-kit-php/graphs/contributors"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "/Users/ikwattro/dev/graphaware/php/ogm-php"
+        }
+    ],
     "support": {
         "email": "support@graphstory.com"
     },
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.6.0",
         "dearon/slim-mustache": "0.1.*",
-        "everyman/neo4jphp": "dev-master",
         "monolog/monolog": "1.*",
         "mustache/mustache": "~2.7",
         "slim/slim": "2.*",
-        "zendframework/zend-config": "~2.3"
+        "zendframework/zend-config": "~2.3",
+        "graphaware/neo4j-php-ogm": "^1.0@alpha",
+        "graphaware/neo4j-php-client": "^4.0@alpha"
     },
     "require-dev": {
         "phing/phing": "~2.8",
