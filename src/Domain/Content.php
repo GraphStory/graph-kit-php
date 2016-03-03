@@ -110,6 +110,4 @@ class Content
     {
         $this->timestamp = $timestamp;
     }
-
-
 }
