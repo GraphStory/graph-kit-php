@@ -2,8 +2,7 @@
 
 use GraphStory\GraphKit\Exception\JsonResponseEncodingException;
 use GraphStory\GraphKit\Model\Content;
-use GraphStory\GraphKit\Model\User;
-use GraphStory\GraphKit\Neo4jClient;
+use GraphStory\GraphKit\Domain\User;
 use GraphStory\GraphKit\Service\ContentService;
 use GraphStory\GraphKit\Service\UserService;
 use GraphStory\GraphKit\Slim\JsonResponse;
@@ -13,27 +12,22 @@ use Monolog\Logger;
 use Slim\Middleware\SessionCookie;
 use Slim\Mustache\Mustache;
 use Slim\Slim;
-
-if (getenv('SLIM_MODE') !== 'test') {
-    $neo4jClient = new \Everyman\Neo4j\Client(
-        $config['graphStory']['restHost'],
-        $config['graphStory']['restPort']
-    );
-
-    $neo4jClient->getTransport()->setAuth(
-        $config['graphStory']['restUsername'],
-        $config['graphStory']['restPassword']
-    );
-
-    if ($config['graphStory']['https']) {
-        $neo4jClient->getTransport()->useHttps();
-    }
-
-    // neo client
-    Neo4jClient::setClient($neo4jClient);
-}
+use GraphAware\Neo4j\Client\ClientBuilder;
 
 $app = new Slim($config['slim']);
+
+if (getenv('SLIM_MODE') !== 'test') {
+    $client = ClientBuilder::create()
+        ->addConnection('default', getenv('GRAPHSTORY_URL'))
+        ->setDefaultTimeout(10)
+        ->build();
+
+    $app->container->singleton('em', function() use ($client) {
+        $em = new \GraphAware\Neo4j\OGM\Manager($client);
+
+        return $em;
+    });
+}
 
 $app->container->singleton('logger', function () use ($config) {
     $logger = new Logger('graph-kit');
@@ -110,10 +104,13 @@ $app->post('/login', function () use ($app) {
     if (!empty($username)) {
         // lower case the username.
         $username = strtolower($username);
-        $checkuser = UserService::getByUsername($username);
+
+        /** @var \GraphAware\Neo4j\OGM\Repository\BaseRepository $repository */
+        $repository = $app->container->get('em')->getRepository(User::class);
+        $user = $repository->findOneBy('username', $username);
 
         // match
-        if (!is_null($checkuser)) {
+        if (null !== $user) {
             $_SESSION['username'] = $username;
 
             $app->redirect($app->urlFor('social-graph'));

@@ -2,11 +2,7 @@
 
 namespace GraphStory\GraphKit\Service;
 
-use Everyman\Neo4j\Cypher\Query;
-use Everyman\Neo4j\Node;
-use Everyman\Neo4j\Query\ResultSet;
 use GraphStory\GraphKit\Model\User;
-use GraphStory\GraphKit\Neo4jClient;
 
 class UserService
 {

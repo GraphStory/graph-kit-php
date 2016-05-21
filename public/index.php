@@ -18,8 +18,6 @@ define('APPLICATION_PATH', realpath(dirname(__DIR__)));
 $loader = require_once __DIR__.'/../vendor/autoload.php';
 \Doctrine\Common\Annotations\AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
 
-require_once APPLICATION_PATH . '/vendor/autoload.php';
-
 use Zend\Config\Factory as ConfigFactory;
 
 $configPaths = sprintf(
