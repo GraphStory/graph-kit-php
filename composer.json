@@ -44,8 +44,8 @@
         "mustache/mustache": "~2.7",
         "slim/slim": "2.*",
         "zendframework/zend-config": "~2.3",
-        "graphaware/neo4j-php-ogm": "^1.0@alpha",
-        "graphaware/neo4j-php-client": "^4.0@alpha"
+        "graphaware/neo4j-php-ogm": "^dev-master",
+        "graphaware/neo4j-php-client": "^4.0"
     },
     "require-dev": {
         "phing/phing": "~2.8",
