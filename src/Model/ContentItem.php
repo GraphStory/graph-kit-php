@@ -24,8 +24,6 @@ class ContentItem
      */
     protected $isOwner;
 
-    public $elt = 'lalallallalalla';
-
     /**
      * @return mixed
      */

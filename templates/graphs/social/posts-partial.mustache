@@ -1,7 +1,7 @@
-<tr id="tr_{{ contentId }}">
+<tr id="tr_{{ getPost.getId }}">
     <td>
-        <a href="{{ url }}" id="url_{{ content.getPost.getId }}" target="_blank">lala{{ content.elt }}</a><br>
-        tags: {{ tagstr }} :: Posted by {{ userNameForPost }} at <a href="{{ postUrl }}{{ contentId }}">{{ timestamp }}</a>
+        <a href="{{ url }}" id="url_{{ getPost.getId }}" target="_blank">{{ getPost.getTitle }}</a><br>
+        tags: {{ tagstr }} :: Posted by {{ getAuthor.getUsername }} at <a href="{{ postUrl }}{{ getPost.getId }}">{{ getPost.getTimestamp }}</a>
     </td>
     <td>
         {{# owner }}
