@@ -233,14 +233,24 @@ $app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
 
 // takes current user session and will unfollow :username
 $app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) {
-    UserService::unfollowUser($_SESSION['username'], $userToUnfollow);
+    /** @var User $user */
+    $user = $app->container->get('em')->getRepository(User::class)->findOneBy('username', $_SESSION['username']);
+    if (!$user) {
+        return;
+    }
 
-    $following = UserService::following($_SESSION['username']);
+    foreach ($user->getFollowing() as $friend) {
+        if ($friend->getId() === (int) $userToUnfollow) {
+            $user->getFollowing()->removeElement($friend);
+        }
+    }
+    $app->container->get('em')->flush();
+    $following = $user->getFollowing();
     $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
     $return = array();
 
     foreach ($following as $friend) {
-        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+        $content[] = array('unfollowUrl' => $unfollowUrl, $friend);
 
         $return[] = $app->view
             ->getInstance()

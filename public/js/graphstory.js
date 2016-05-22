@@ -34,6 +34,7 @@ $('.to-follow').on('click', 'a.addfriend', function() {
 });
 
 $('#following').on('click', 'a.removefriend', function() {
+    console.log($(this));
     removefriend($(this).data('url'), $(this).attr('id'));
     return false;
 });
@@ -295,6 +296,7 @@ function renderSearchByUsername(data) {
 }
 
 function renderFollowers(data) {
+    console.log(data);
     var list = data == null ? [] : (data.following instanceof Array ? data.following : [data.following]);
 
     $('#following tr').remove();

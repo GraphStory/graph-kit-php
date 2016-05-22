@@ -36,6 +36,7 @@ class User
 
     /**
      * @OGM\Relationship(type="FOLLOWS", direction="OUTGOING", collection=true, targetEntity="GraphStory\GraphKit\Domain\User", mappedBy="followers")
+     *
      * @var \GraphStory\GraphKit\Domain\User[]
      */
     protected $following;
@@ -114,7 +115,7 @@ class User
     }
 
     /**
-     * @return mixed
+     * @return \Doctrine\Common\Collections\ArrayCollection|\GraphStory\GraphKit\Domain\User[]
      */
     public function getFollowing()
     {
