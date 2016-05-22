@@ -250,11 +250,11 @@ $app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) 
     $return = array();
 
     foreach ($following as $friend) {
-        $content[] = array('unfollowUrl' => $unfollowUrl, $friend);
+        $content = array('unfollowUrl' => $unfollowUrl, 'user' => $friend);
 
         $return[] = $app->view
             ->getInstance()
-            ->render('graphs/social/friends-partial', $content);
+            ->render('graphs/social/friends-partial-follower', $content);
     }
 
     $app->jsonResponse->build(
