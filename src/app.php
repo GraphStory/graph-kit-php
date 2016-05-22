@@ -1,10 +1,8 @@
 <?php
 
 use GraphStory\GraphKit\Exception\JsonResponseEncodingException;
-use GraphStory\GraphKit\Model\Content;
-use GraphStory\GraphKit\Model\User;
-use GraphStory\GraphKit\Neo4jClient;
-use GraphStory\GraphKit\Service\ContentService;
+use GraphStory\GraphKit\Domain\User;
+use GraphStory\GraphKit\Domain\Content;
 use GraphStory\GraphKit\Service\UserService;
 use GraphStory\GraphKit\Slim\JsonResponse;
 use GraphStory\GraphKit\Slim\Middleware\Navigation;
@@ -13,27 +11,24 @@ use Monolog\Logger;
 use Slim\Middleware\SessionCookie;
 use Slim\Mustache\Mustache;
 use Slim\Slim;
-
-if (getenv('SLIM_MODE') !== 'test') {
-    $neo4jClient = new \Everyman\Neo4j\Client(
-        $config['graphStory']['restHost'],
-        $config['graphStory']['restPort']
-    );
-
-    $neo4jClient->getTransport()->setAuth(
-        $config['graphStory']['restUsername'],
-        $config['graphStory']['restPassword']
-    );
-
-    if ($config['graphStory']['https']) {
-        $neo4jClient->getTransport()->useHttps();
-    }
-
-    // neo client
-    Neo4jClient::setClient($neo4jClient);
-}
+use GraphAware\Neo4j\Client\ClientBuilder;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 $app = new Slim($config['slim']);
+
+if (getenv('SLIM_MODE') !== 'test') {
+    $client = ClientBuilder::create()
+        ->addConnection('default', getenv('GRAPHSTORY_URL'))
+        ->setDefaultTimeout(10)
+        ->build();
+
+    $app->container->singleton('em', function() use ($client) {
+        $em = new \GraphAware\Neo4j\OGM\Manager($client);
+
+        return $em;
+    });
+}
 
 $app->container->singleton('logger', function () use ($config) {
     $logger = new Logger('graph-kit');
@@ -43,6 +38,12 @@ $app->container->singleton('logger', function () use ($config) {
     ));
 
     return $logger;
+});
+
+$app->container->singleton('serializer', function() {
+    $encoders = array(new JsonEncoder());
+    $normalizers = array(new ObjectNormalizer());
+    return new \Symfony\Component\Serializer\Serializer($normalizers, $encoders);
 });
 
 $app->jsonResponse = function () use ($app) {
@@ -110,12 +111,14 @@ $app->post('/login', function () use ($app) {
     if (!empty($username)) {
         // lower case the username.
         $username = strtolower($username);
-        $checkuser = UserService::getByUsername($username);
+
+        /** @var \GraphAware\Neo4j\OGM\Repository\BaseRepository $repository */
+        $repository = $app->container->get('em')->getRepository(User::class);
+        $user = $repository->findOneBy('username', $username);
 
         // match
-        if (!is_null($checkuser)) {
+        if (null !== $user) {
             $_SESSION['username'] = $username;
-
             $app->redirect($app->urlFor('social-graph'));
         } else {
             $app->render('home/message.mustache', array(
@@ -200,14 +203,16 @@ $app->put('/user/edit', function () use ($app) {
 
 // social - friends - get list of friends and search for new ones
 $app->get('/friends', $isLoggedIn, function () use ($app) {
-    $user = UserService::getByUsername($_SESSION['username']);
-    $following = UserService::following($_SESSION['username']);
-    $suggestions = UserService::friendSuggestions($_SESSION['username']);
+    /** @var User $user */
+    $user = $app->container->get('em')->getRepository(User::class)->findOneBy('username', $_SESSION['username']);
+    $following = $user->getFollowing();
+
+    // $suggestions = UserService::friendSuggestions($_SESSION['username']); @TODO use reco4php for suggestions
 
     $app->render('graphs/social/friends.mustache', array(
         'user' => $user,
         'following' => $following,
-        'suggestions' => $suggestions,
+        'suggestions' => [],
         'unfollowUrl' => $app->urlFor('social-unfollow', array('userToUnfollow' => null)),
         'followUrl' => $app->urlFor('social-follow', array('userToFollow' => null)),
     ));
@@ -215,18 +220,26 @@ $app->get('/friends', $isLoggedIn, function () use ($app) {
 
 // takes current user session and will follow :username, e.g. one way follow
 $app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
-    UserService::followUser($_SESSION['username'], $userToFollow);
-
-    $following = UserService::following($_SESSION['username']);
+    $userRepo = $app->container->get('em')->getRepository(User::class);
+    /** @var User $user */
+    $user = $userRepo->findOneBy('username', $_SESSION['username']);
+    $toFollow = $userRepo->findOneBy('username', $userToFollow);
+    if (null === $user || null === $toFollow) {
+        $app->jsonResponse->build();
+        return;
+    }
+    $user->getFollowing()->add($toFollow);
+    $app->container->get('em')->flush();
+    $following = $user->getFollowing();
     $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
     $return = array();
 
     foreach ($following as $friend) {
-        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+        $content = array('unfollowUrl' => $unfollowUrl, 'user' => $friend);
 
         $return[] = $app->view
             ->getInstance()
-            ->render('graphs/social/friends-partial', $content);
+            ->render('graphs/social/friends-partial-follower', $content);
     }
 
     $app->jsonResponse->build(
@@ -236,18 +249,28 @@ $app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
 
 // takes current user session and will unfollow :username
 $app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) {
-    UserService::unfollowUser($_SESSION['username'], $userToUnfollow);
+    /** @var User $user */
+    $user = $app->container->get('em')->getRepository(User::class)->findOneBy('username', $_SESSION['username']);
+    if (!$user) {
+        return;
+    }
 
-    $following = UserService::following($_SESSION['username']);
+    foreach ($user->getFollowing() as $friend) {
+        if ($friend->getId() === (int) $userToUnfollow) {
+            $user->getFollowing()->removeElement($friend);
+        }
+    }
+    $app->container->get('em')->flush();
+    $following = $user->getFollowing();
     $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
     $return = array();
 
     foreach ($following as $friend) {
-        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+        $content = array('unfollowUrl' => $unfollowUrl, 'user' => $friend);
 
         $return[] = $app->view
             ->getInstance()
-            ->render('graphs/social/friends-partial', $content);
+            ->render('graphs/social/friends-partial-follower', $content);
     }
 
     $app->jsonResponse->build(
@@ -257,23 +280,23 @@ $app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) 
 
 //search users by name
 $app->get('/searchbyusername/:search', function ($search) use ($app) {
-    $users = UserService::searchByUsername($search, $_SESSION['username']);
-
+    $users = $app->container->get('em')->getRepository(User::class)->findBy('username', $search);
+    $data = $app->container->get('serializer')->serialize($users, 'json');
     $app->jsonResponse->build(
-        array('users' => $users)
+        array('users' => $data)
     );
 })->name('user-search');
 
 // social - show posts
 $app->get('/posts', $isLoggedIn, function () use ($app) {
-    $content = ContentService::getContent($_SESSION['username'], 0);
-    $socialContent = array_slice($content, 0, 3);
-    $moreContent = (count($content) >= 4);
+    /** @var \GraphStory\GraphKit\Repository\ContentRepository $contentRepository */
+    $contentRepository = $app->container->get('em')->getRepository(Content::class);
+    $content = $contentRepository->getContent($_SESSION['username'], 0, 5);
 
     $app->render('graphs/social/posts.mustache', array(
         'username' => $_SESSION['username'],
-        'socialContent' => $socialContent,
-        'moreContent' => $moreContent,
+        'socialContent' => $content,
+        'moreContent' => false,
         'moreContentUrl' => $app->urlFor('social-feed', array('skip' => null)),
         'addContentUrl' => $app->urlFor('social-post-add'),
         'friendsUrl' => $app->urlFor('social-friends'),
@@ -306,19 +329,26 @@ $app->post('/posts', function () use ($app) {
     $request = $app->request();
     $contentParams = json_decode($request->getBody());
 
-    $content = new Content();
-    $content->title = $contentParams->title;
-    $content->url = $contentParams->url;
+    $content = new Content($contentParams->title, $contentParams->url);
 
     // are tags set?
     if (isset($contentParams->tagstr)) {
-        $content->tagstr = $contentParams->tagstr;
+        $content->setTagStr($contentParams->tagstr);
     }
 
-    $result = ContentService::add($_SESSION['username'], $content);
-    $content = $result[0];
+    $userRepo = $app->container->get('em')->getRepository(User::class);
+    /** @var User $user */
+    $user = $userRepo->findOneBy('username', $_SESSION['username']);
+    if (!$user) {
+        return;
+    }
+    $user->setCurrentPost($content);
+    $em = $app->container->get('em');
+    $em->persist($user);
+    $em->flush();
+    $contentItem = new \GraphStory\GraphKit\Model\ContentItem($content, $user, true);
     $postUrl = $app->urlFor('social-post', array('postId' => null));
-    $content = array_merge(array('postUrl' => $postUrl), $content->toArray());
+    $content = array_merge(array('postUrl' => $postUrl), $contentItem);
 
     $app->render('graphs/social/posts-partial', $content);
 })->name('social-post-add');

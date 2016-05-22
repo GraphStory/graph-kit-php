@@ -8,3 +8,5 @@ config/secret.php
 neo4j-community-*
 test-db
 .php_cs_cache
+.graphstory_env
+composer.lock

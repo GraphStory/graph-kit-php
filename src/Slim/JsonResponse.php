@@ -42,7 +42,7 @@ class JsonResponse
      */
     public function build($body, $status = 200)
     {
-        $json = json_encode($body);
+        $json = !is_string($body) ? json_encode($body) : $body;
 
         if ($json === false) {
             throw new JsonResponseEncodingException(
