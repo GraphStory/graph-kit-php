@@ -222,9 +222,10 @@ $app->get('/friends', $isLoggedIn, function () use ($app) {
 $app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
     $userRepo = $app->container->get('em')->getRepository(User::class);
     /** @var User $user */
-    $user = $userRepo->findOneBy('username', 'ikwattro');
-    $toFollow = $userRepo->findOneById((int) $userToFollow);
-    if (null === $user || null === $toFollow) {
+    $user = $userRepo->findOneBy('username', $_SESSION['username']);
+    $toFollow = $userRepo->findOneBy('username', $userToFollow);
+    if (null === $user || null === $toFollow) {
+        $app->jsonResponse->build();
         return;
     }
     $user->getFollowing()->add($toFollow);
