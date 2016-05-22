@@ -1,9 +1,8 @@
 <?php
 
 use GraphStory\GraphKit\Exception\JsonResponseEncodingException;
-use GraphStory\GraphKit\Model\Content;
 use GraphStory\GraphKit\Domain\User;
-use GraphStory\GraphKit\Service\ContentService;
+use GraphStory\GraphKit\Domain\Content;
 use GraphStory\GraphKit\Service\UserService;
 use GraphStory\GraphKit\Slim\JsonResponse;
 use GraphStory\GraphKit\Slim\Middleware\Navigation;
@@ -112,7 +111,6 @@ $app->post('/login', function () use ($app) {
         // match
         if (null !== $user) {
             $_SESSION['username'] = $username;
-
             $app->redirect($app->urlFor('social-graph'));
         } else {
             $app->render('home/message.mustache', array(
@@ -263,14 +261,14 @@ $app->get('/searchbyusername/:search', function ($search) use ($app) {
 
 // social - show posts
 $app->get('/posts', $isLoggedIn, function () use ($app) {
-    $content = ContentService::getContent($_SESSION['username'], 0);
-    $socialContent = array_slice($content, 0, 3);
-    $moreContent = (count($content) >= 4);
+    /** @var \GraphStory\GraphKit\Repository\ContentRepository $contentRepository */
+    $contentRepository = $app->container->get('em')->getRepository(Content::class);
+    $content = $contentRepository->getContent($_SESSION['username'], 0, 5);
 
     $app->render('graphs/social/posts.mustache', array(
         'username' => $_SESSION['username'],
-        'socialContent' => $socialContent,
-        'moreContent' => $moreContent,
+        'socialContent' => $content,
+        'moreContent' => false,
         'moreContentUrl' => $app->urlFor('social-feed', array('skip' => null)),
         'addContentUrl' => $app->urlFor('social-post-add'),
         'friendsUrl' => $app->urlFor('social-friends'),

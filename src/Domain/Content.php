@@ -5,7 +5,7 @@ namespace GraphStory\GraphKit\Domain;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
- * @OGM\Node(label="Content")
+ * @OGM\Node(label="Content", repository="\GraphStory\GraphKit\Repository\ContentRepository")
  */
 class Content
 {
