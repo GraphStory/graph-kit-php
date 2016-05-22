@@ -47,7 +47,7 @@ class User
     protected $followers;
 
     /**
-     * @OGM\Relationship(type="CURRENT_POST", direction="OUTGOING", targetEntity="GraphStory\GraphKit\Domain\Content")
+     * @OGM\Relationship(type="CURRENTPOST", direction="OUTGOING", targetEntity="GraphStory\GraphKit\Domain\Content")
      */
     protected $currentPost;
 

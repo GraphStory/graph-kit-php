@@ -195,14 +195,16 @@ $app->put('/user/edit', function () use ($app) {
 
 // social - friends - get list of friends and search for new ones
 $app->get('/friends', $isLoggedIn, function () use ($app) {
-    $user = UserService::getByUsername($_SESSION['username']);
-    $following = UserService::following($_SESSION['username']);
-    $suggestions = UserService::friendSuggestions($_SESSION['username']);
+    /** @var User $user */
+    $user = $app->container->get('em')->getRepository(User::class)->findOneBy('username', $_SESSION['username']);
+    $following = $user->getFollowing();
+
+    // $suggestions = UserService::friendSuggestions($_SESSION['username']); @TODO use reco4php for suggestions
 
     $app->render('graphs/social/friends.mustache', array(
         'user' => $user,
         'following' => $following,
-        'suggestions' => $suggestions,
+        'suggestions' => [],
         'unfollowUrl' => $app->urlFor('social-unfollow', array('userToUnfollow' => null)),
         'followUrl' => $app->urlFor('social-follow', array('userToFollow' => null)),
     ));
