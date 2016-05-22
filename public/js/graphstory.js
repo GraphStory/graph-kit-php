@@ -34,7 +34,6 @@ $('.to-follow').on('click', 'a.addfriend', function() {
 });
 
 $('#following').on('click', 'a.removefriend', function() {
-    console.log($(this));
     removefriend($(this).data('url'), $(this).attr('id'));
     return false;
 });
@@ -282,13 +281,14 @@ function createUserProductViewRel(productNodeId){
 }
 
 function renderSearchByUsername(data) {
-    var list = data == null ? [] : (data.users instanceof Array ? data.users : [data.users]);
 
     $('#userstoadd tr').remove();
 
-    if (list.length <= 0 ) {
+    if (data.users.length <= 0 ) {
         $('#userstoadd').append('<tr><td>No Users Found<td></tr>');
     }
+
+    var list = $.parseJSON(data.users);
 
     $.each(list, function(index, users) {
         $('#userstoadd').append('<tr><td>' + users.username + '<td><td><a href="#" id="' + users.username + '" class="addfriend">Add as Friend</a></td></tr>');
@@ -296,7 +296,6 @@ function renderSearchByUsername(data) {
 }
 
 function renderFollowers(data) {
-    console.log(data);
     var list = data == null ? [] : (data.following instanceof Array ? data.following : [data.following]);
 
     $('#following tr').remove();

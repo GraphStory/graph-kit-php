@@ -12,6 +12,8 @@ use Slim\Middleware\SessionCookie;
 use Slim\Mustache\Mustache;
 use Slim\Slim;
 use GraphAware\Neo4j\Client\ClientBuilder;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 $app = new Slim($config['slim']);
 
@@ -36,6 +38,12 @@ $app->container->singleton('logger', function () use ($config) {
     ));
 
     return $logger;
+});
+
+$app->container->singleton('serializer', function() {
+    $encoders = array(new JsonEncoder());
+    $normalizers = array(new ObjectNormalizer());
+    return new \Symfony\Component\Serializer\Serializer($normalizers, $encoders);
 });
 
 $app->jsonResponse = function () use ($app) {
@@ -212,18 +220,25 @@ $app->get('/friends', $isLoggedIn, function () use ($app) {
 
 // takes current user session and will follow :username, e.g. one way follow
 $app->get('/follow/:userToFollow', function ($userToFollow) use ($app) {
-    UserService::followUser($_SESSION['username'], $userToFollow);
-
-    $following = UserService::following($_SESSION['username']);
+    $userRepo = $app->container->get('em')->getRepository(User::class);
+    /** @var User $user */
+    $user = $userRepo->findOneBy('username', 'ikwattro');
+    $toFollow = $userRepo->findOneById((int) $userToFollow);
+    if (null === $user || null === $toFollow) {
+        return;
+    }
+    $user->getFollowing()->add($toFollow);
+    $app->container->get('em')->flush();
+    $following = $user->getFollowing();
     $unfollowUrl = $app->urlFor('social-unfollow', array('userToUnfollow' => null));
     $return = array();
 
     foreach ($following as $friend) {
-        $content = array_merge(array('unfollowUrl' => $unfollowUrl), $friend->toArray());
+        $content = array('unfollowUrl' => $unfollowUrl, 'user' => $friend);
 
         $return[] = $app->view
             ->getInstance()
-            ->render('graphs/social/friends-partial', $content);
+            ->render('graphs/social/friends-partial-follower', $content);
     }
 
     $app->jsonResponse->build(
@@ -264,10 +279,10 @@ $app->delete('/unfollow/:userToUnfollow', function ($userToUnfollow) use ($app) 
 
 //search users by name
 $app->get('/searchbyusername/:search', function ($search) use ($app) {
-    $users = UserService::searchByUsername($search, $_SESSION['username']);
-
+    $users = $app->container->get('em')->getRepository(User::class)->findBy('username', $search);
+    $data = $app->container->get('serializer')->serialize($users, 'json');
     $app->jsonResponse->build(
-        array('users' => $users)
+        array('users' => $data)
     );
 })->name('user-search');
 
