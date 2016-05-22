@@ -3,6 +3,8 @@
 namespace GraphStory\GraphKit\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphStory\GraphKit\Domain\Content;
+use GraphStory\GraphKit\Domain\User;
 
 /**
  * @OGM\QueryResult()
@@ -23,6 +25,13 @@ class ContentItem
      * @OGM\MappedResult(type="BOOLEAN")
      */
     protected $isOwner;
+
+    public function __construct(Content $post, User $author, $isOwner)
+    {
+        $this->post = $post;
+        $this->author = $author;
+        $this->isOwner = $isOwner;
+    }
 
     /**
      * @return mixed

@@ -39,6 +39,14 @@ class Content
      */
     protected $timestamp;
 
+    public function __construct($title, $url)
+    {
+        $this->title = $title;
+        $this->url = $url;
+        $dt = new \DateTime("NOW", new \DateTimeZone("UTC"));
+        $this->timestamp = $dt->getTimestamp();
+    }
+
     /**
      * @return mixed
      */
@@ -79,20 +87,17 @@ class Content
         $this->url = $url;
     }
 
+    public function setTagStr($tagStr)
+    {
+        $this->tagStr = $tagStr;
+    }
+
     /**
      * @return mixed
      */
     public function getTagStr()
     {
         return $this->tagStr;
-    }
-
-    /**
-     * @param mixed $tagStr
-     */
-    public function setTagStr($tagStr)
-    {
-        $this->tagStr = $tagStr;
     }
 
     /**

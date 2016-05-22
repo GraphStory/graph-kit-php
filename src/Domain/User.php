@@ -159,4 +159,9 @@ class User
         $this->followers = $followers;
     }
 
+    public function setCurrentPost(Content $content)
+    {
+        $this->currentPost = $content;
+    }
+
 }

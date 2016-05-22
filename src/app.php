@@ -301,19 +301,26 @@ $app->post('/posts', function () use ($app) {
     $request = $app->request();
     $contentParams = json_decode($request->getBody());
 
-    $content = new Content();
-    $content->title = $contentParams->title;
-    $content->url = $contentParams->url;
+    $content = new Content($contentParams->title, $contentParams->url);
 
     // are tags set?
     if (isset($contentParams->tagstr)) {
-        $content->tagstr = $contentParams->tagstr;
+        $content->setTagStr($contentParams->tagstr);
     }
 
-    $result = ContentService::add($_SESSION['username'], $content);
-    $content = $result[0];
+    $userRepo = $app->container->get('em')->getRepository(User::class);
+    /** @var User $user */
+    $user = $userRepo->findOneBy('username', $_SESSION['username']);
+    if (!$user) {
+        return;
+    }
+    $user->setCurrentPost($content);
+    $em = $app->container->get('em');
+    $em->persist($user);
+    $em->flush();
+    $contentItem = new \GraphStory\GraphKit\Model\ContentItem($content, $user, true);
     $postUrl = $app->urlFor('social-post', array('postId' => null));
-    $content = array_merge(array('postUrl' => $postUrl), $content->toArray());
+    $content = array_merge(array('postUrl' => $postUrl), $contentItem);
 
     $app->render('graphs/social/posts-partial', $content);
 })->name('social-post-add');
